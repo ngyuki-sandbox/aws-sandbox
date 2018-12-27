@@ -1,0 +1,12 @@
+ec2_key_name = "ore-no-key"
+
+# Amazon EKS-Optimized AMI
+eks_node_ami = "ami-063650732b3e8b38c"
+
+# Amazon Linux 2 AMI (HVM), SSD Volume Type
+bastion_ami = "ami-0a2de1c3b415889d2"
+
+# MyIPs
+my_cidr_blocks = [
+  "192.0.2.123/32"
+]

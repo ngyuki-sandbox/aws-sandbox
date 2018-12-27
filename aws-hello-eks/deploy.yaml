@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: httpd
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 0%
+  template:
+    metadata:
+      name: httpd
+      labels:
+        app: httpd
+    spec:
+      containers:
+        - name: httpd
+          image: httpd
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+  selector:
+    app: httpd
