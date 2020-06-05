@@ -1,0 +1,11 @@
+################################################################################
+# variables
+
+profile        = "ore-no-profile"
+region         = "ap-northeast-1"
+key_name       = "ore-no-key"
+tag            = "tls2tls"
+zone_domain    = "example.com."
+service_domain = "tls2tls.example.com."
+server_domain  = "server.tls2tls.example.com."
+trusted_cidr   = "192.0.2.123/32"
