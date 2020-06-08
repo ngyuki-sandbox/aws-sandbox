@@ -1,0 +1,5 @@
+/.envrc
+/.serverless/
+/node_modules/
+/package-lock.json
+/vars.yml

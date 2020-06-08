@@ -1,0 +1,57 @@
+service: serverless-aws-hello
+
+provider:
+  name: aws
+  region: ap-northeast-1
+  profile: ${self:custom.vars.profile}
+  runtime: nodejs12.x
+  memorySize: 128
+  timeout: 30
+  logRetentionInDays: 1
+  versionFunctions: false
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "ssm:GetParameter"
+      Resource:
+        - "*"
+
+plugins:
+  - serverless-pseudo-parameters
+
+custom:
+  vars: ${file(./vars.yml)}
+
+package:
+  exclude:
+    - '**'
+    - '!*.js'
+    - '!node_modules/**'
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
+      - schedule: cron(* * * * ? *)
+      - sns: hello
+    environment:
+      HELLO_SQS_QUEUE_URL: { Ref: HelloSqs }
+    destinations:
+      onSuccess: success
+      onFailure: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:failure
+  success:
+    handler: handler.success
+
+resources:
+  Resources:
+    FailureSns:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: failure
+    HelloSqs:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: hello
