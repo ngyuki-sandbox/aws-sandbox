@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs12.x
+      CodeUri: src/
+      Environment:
+        Variables:
+          HELLO_SQS_QUEUE: !Ref HelloWorldQueue
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: get
+        CWSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: 'rate(1 minute)'
+      EventInvokeConfig:
+        DestinationConfig:
+          OnSuccess:
+            Type: SNS
+            Destination: !Ref HelloWorldTopic
+  HelloWorldTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: hello
+  HelloWorldQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: hello
