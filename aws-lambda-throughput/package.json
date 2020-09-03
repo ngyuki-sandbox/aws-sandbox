@@ -1,0 +1,17 @@
+{
+  "name": "aws-lambda-throughput",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/aws-sdk": "^2.7.0",
+    "@types/node": "^14.6.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
