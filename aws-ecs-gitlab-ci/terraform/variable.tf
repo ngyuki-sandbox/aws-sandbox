@@ -1,0 +1,10 @@
+////////////////////////////////////////////////////////////////////////////////
+// Variables
+
+variable "tag" {
+  default = "oreore-ecs-gitlab"
+}
+
+variable "app_image" {
+  default = "nginx:alpine"
+}

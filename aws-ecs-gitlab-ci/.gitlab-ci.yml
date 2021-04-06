@@ -1,0 +1,33 @@
+variables:
+    APP_ENV: dev
+
+stages:
+  - prepare
+  - build
+
+prepare:
+  stage: prepare
+  image:
+    name: amazon/aws-cli
+    entrypoint: [""]
+  script:
+    - aws --version
+    - aws --region ap-northeast-1 ecr get-login-password > .ecr_password
+    - echo "ECR_PASSWORD=$(cat .ecr_password)" > .env
+  artifacts:
+    reports:
+      dotenv: .env
+
+build:
+  stage: build
+  dependencies:
+    - prepare
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  variables:
+      ECR_USER: AWS
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$ECR_URL\":{\"username\":\"$ECR_USER\",\"password\":\"$ECR_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context "$CI_PROJECT_DIR" --dockerfile "$CI_PROJECT_DIR/Dockerfile" --destination "$ECR_IMAGE:$CI_COMMIT_SHA"
