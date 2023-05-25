@@ -1,0 +1,8 @@
+node_modules/
+.layer/*
+!.gitkeep
+*.zip
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+terraform.tfvars

@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "devDependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.244.0",
+    "@aws-sdk/client-rds": "^3.337.0",
+    "@types/node": "^18.11.18"
+  },
+  "dependencies": {
+    "mysql2": "^3.3.2"
+  }
+}
