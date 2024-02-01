@@ -1,8 +1,8 @@
 # github actions からプルリクをトリガーに aws codepipeline を実行
 
 terraform apply で AWS 側の環境構築をします。
-CodeStar Connections のためにマネコンで追加の作業が必要かも？
 IAM Role の arn と CodePipeline の名前が出力されます。後で使います。
+CodeStar Connections が保留中になるためマネコンで確定させます。
 
 GitHub 側のリポジトリで次のようなワークフローを作成します。
 
@@ -19,25 +19,29 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v3
+      - uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: github-actions
           aws-region: ap-northeast-1
 
-      - name: aws sts get-caller-identity
-        run: aws sts get-caller-identity
+      - run: aws sts get-caller-identity
 
-      - name: aws codepipeline start-pipeline-execution
-        run: aws codepipeline start-pipeline-execution
+      - run: aws codepipeline start-pipeline-execution
           --name ${{ secrets.CODEPIPELINE_NAME }}
           --source-revisions actionName=Source,revisionType=COMMIT_ID,revisionValue=${{ github.sha }}
+          --variables name=PR_NUMBER,value=${{ github.event.number }} name=PR_ACTION,value=${{ github.event.action }}
 ```
 
 GitHub で以下のシークレットを登録します。
 
-- AWS_ROLE_ARN
-- CODEPIPELINE_NAME
+```sh
+gh secret set --app actions AWS_ROLE_ARN
+gh secret set --app actions CODEPIPELINE_NAME
+```
 
 GitHub のリポジトリでプルリクを開くと CodePipeline が実行されます。
+
+```sh
+gh repo view -w
+```
