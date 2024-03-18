@@ -1,0 +1,7 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - env | grep ECR | sort
+      - cat $CODEBUILD_SRC_DIR_Image/imageDetail.json
