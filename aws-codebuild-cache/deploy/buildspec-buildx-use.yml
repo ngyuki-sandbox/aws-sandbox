@@ -1,0 +1,28 @@
+version: 0.2
+
+env:
+  shell: bash
+  variables:
+    IMAGE_PRE: buildx-use
+
+phases:
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - aws ecr get-login-password | docker login --username AWS --password-stdin "$ECR_REPOSITORY_URL"
+      - COMMIT_HASH=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+      - IMAGE_URI=$ECR_REPOSITORY_URL:$IMAGE_PRE-$COMMIT_HASH
+      - BUILD_DATE="$(date +%Y-%m-%dT%H:%M:%S)"
+
+  build:
+    on-failure: ABORT
+    commands:
+      - docker buildx create --use
+      - docker buildx build
+          --load
+          --target dev
+          --tag "$IMAGE_URI"
+          --build-arg "COMMIT_HASH=$COMMIT_HASH"
+          --build-arg "BUILD_DATE=$BUILD_DATE"
+          .
+      - docker push "$IMAGE_URI"
