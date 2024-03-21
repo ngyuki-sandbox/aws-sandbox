@@ -18,6 +18,8 @@ resource "aws_instance" "server" {
     timezone: "Asia/Tokyo"
     hostname: "${var.name}-server"
     ssh_authorized_keys: ${jsonencode(var.ec2_authorized_keys)}
+    runcmd:
+      - sudo dnf install -y postgresql15
   EOS
 
   root_block_device {
