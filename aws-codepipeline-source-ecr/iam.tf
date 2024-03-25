@@ -24,11 +24,6 @@ resource "aws_iam_role_policy" "build" {
     Version = "2012-10-17",
     Statement = [
       {
-        Action   = "ecr:*"
-        Effect   = "Allow"
-        Resource = "*"
-      },
-      {
         Action   = "s3:*"
         Effect   = "Allow",
         Resource = "*"
@@ -69,9 +64,9 @@ resource "aws_iam_role_policy" "pipeline" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action   = "ecr:*"
+        Action   = "ecr:DescribeImages"
         Effect   = "Allow"
-        Resource = "*"
+        Resource = aws_ecr_repository.main.arn
       },
       {
         Action   = "s3:*"

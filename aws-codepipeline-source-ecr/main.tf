@@ -9,6 +9,11 @@ output "ecr_repository_url" {
 
 provider "aws" {
   region = "ap-northeast-1"
+  default_tags {
+    tags = {
+      Path = basename(abspath(path.module))
+    }
+  }
 }
 
 data "archive_file" "source" {
