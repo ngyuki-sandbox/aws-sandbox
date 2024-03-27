@@ -6,6 +6,9 @@ env:
     IMAGE_PRE: buildx-use
 
 phases:
+  install:
+    commands:
+      - docker version
   pre_build:
     on-failure: ABORT
     commands:
