@@ -32,11 +32,11 @@ resource "aws_sns_topic" "main" {
 
 resource "aws_sns_topic_subscription" "main" {
   topic_arn           = aws_sns_topic.main.arn
-  protocol            = "email"
+  protocol            = "email-json"
   endpoint            = var.email
-  filter_policy_scope = "MessageBody"
+  filter_policy_scope = "MessageAttributes"
   filter_policy = jsonencode({
-    "source" : ["oreore"],
+    "source" : ["aaa","bbb"],
     }
   )
 }
