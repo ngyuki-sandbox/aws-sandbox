@@ -1,0 +1,8 @@
+version: 0.2
+phases:
+  build:
+    steps:
+      - name: test
+        run: echo "Hello World!!"
+      - name: date
+        run: date -u
