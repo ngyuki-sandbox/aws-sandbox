@@ -1,9 +1,10 @@
 module "sns" {
-  source          = "./sns"
-  name            = "${var.name}-sns"
-  region          = var.region
-  assume_role_arn = var.sns_assume_role_arn
-  sqs_account_id  = var.sqs_assume_role_arn
+  source              = "./sns"
+  name                = "${var.name}-sns"
+  region              = var.region
+  assume_role_arn     = var.sns_assume_role_arn
+
+  sqs_assume_role_arn = var.sqs_assume_role_arn
 }
 
 module "sqs" {
@@ -11,5 +12,6 @@ module "sqs" {
   name            = "${var.name}-sqs"
   region          = var.region
   assume_role_arn = var.sqs_assume_role_arn
+
   sns_topic_arn   = module.sns.sns_topic_arn
 }
