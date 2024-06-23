@@ -1,0 +1,37 @@
+version: 0.2
+
+env:
+  shell: bash
+  variables:
+    APPSPEC: |
+      version: 0.0
+      Resources:
+        - LambdaFunction:
+            Type: AWS::Lambda::Function
+            Properties:
+              Name: "${LAMBDA_FUNCTION_NAME}"
+              Alias: "${LAMBDA_FUNCTION_ALIAS}"
+              CurrentVersion: "${CURRENT_VERSION}"
+              TargetVersion: "${TARGET_VERSION}"
+
+phases:
+  build:
+    commands:
+      - aws lambda update-function-code --function-name "$LAMBDA_FUNCTION_NAME" --image-uri "$ECR_IMAGE_URI" --publish > lambda.json
+      - cat lambda.json
+
+      # - aws lambda update-alias --function-name "$LAMBDA_FUNCTION_NAME" --name "$LAMBDA_FUNCTION_ALIAS"
+      #     --function-version "$(jq -r .Version < lambda.json)"
+
+      - aws lambda get-alias --function-name "$LAMBDA_FUNCTION_NAME" --name "$LAMBDA_FUNCTION_ALIAS" > alias.json
+      - cat alias.json
+
+      - export TARGET_VERSION="$(jq -r .Version < lambda.json)"
+      - export CURRENT_VERSION="$(jq -r .FunctionVersion < alias.json)"
+      - envsubst <<<"$APPSPEC" > appspec.yaml
+      - cat appspec.yaml
+
+artifacts:
+  files:
+    - appspec.yaml
+  discard-paths: yes
