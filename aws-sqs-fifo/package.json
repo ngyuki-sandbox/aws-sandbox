@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.624.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.2.0"
+  }
+}
