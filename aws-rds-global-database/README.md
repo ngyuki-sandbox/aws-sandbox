@@ -35,3 +35,12 @@ select * from t;
 グローバルデータベースで database_name を指定していても何の効果も無いような気がする。
 
 aws_rds_global_cluster.database_name が何のためにあるのか、判らない？
+
+## セカンダリ database_name, username,password
+
+セカンダリクラスタの作成時は database_name,master_username,master_password は指定できない。
+これらはプライアンリと同値にしかならないため。
+
+> InvalidParameterCombination: Cannot specify database name for cross region replication cluster
+> InvalidParameterCombination: Cannot specify user name for cross region replication cluster
+> InvalidParameterCombination: Cannot specify password for cross region replication cluster
