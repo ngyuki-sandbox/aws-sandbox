@@ -25,7 +25,8 @@ variable "authorized_keys" {
 }
 
 variable "zone_name" {
-  type = string
+  type    = string
+  default = "local"
 }
 
 module "aaa" {
@@ -49,8 +50,6 @@ module "bbb" {
   ]
 }
 
-output "instance_ids" {
-  value = {
-    aaa = module.aaa.instance_id
-  }
+output "instance_id" {
+  value = module.aaa.instance_id
 }

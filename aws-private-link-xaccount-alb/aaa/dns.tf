@@ -1,11 +1,13 @@
 
-data "aws_route53_zone" "main" {
-  name         = var.zone_name
-  private_zone = true
+resource "aws_route53_zone" "main" {
+  name = var.zone_name
+  vpc {
+    vpc_id = data.aws_vpc.main.id
+  }
 }
 
 resource "aws_route53_record" "main" {
-  zone_id = data.aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.main.zone_id
   name    = "aaa"
   type    = "A"
   alias {

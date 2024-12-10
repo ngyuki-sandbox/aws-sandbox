@@ -30,6 +30,7 @@ resource "aws_lb_target_group" "nlb" {
     timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 2
+    matcher             = "200-499"
   }
 }
 

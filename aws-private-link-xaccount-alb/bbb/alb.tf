@@ -31,7 +31,7 @@ resource "aws_lb_target_group" "alb" {
     timeout             = 4
     healthy_threshold   = 2
     unhealthy_threshold = 2
-    matcher             = "200-403"
+    matcher             = "200-499"
   }
 }
 
