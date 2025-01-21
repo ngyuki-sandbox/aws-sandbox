@@ -1,4 +1,10 @@
 
+data "aws_route53_zone" "main" {
+  provider     = aws.cloudfront
+  name         = "${var.zone_name}."
+  private_zone = false
+}
+
 module "cloudfront" {
   source = "./cloudfront"
   providers = {
@@ -6,7 +12,8 @@ module "cloudfront" {
   }
 
   name               = var.name
-  zone_name          = var.zone_name
+  zone_id            = data.aws_route53_zone.main.zone_id
+  acm_domain_name    = var.acm_domain_name
   cf_domain_name     = var.cf_domain_name
   allow_cf_ips       = var.allow_cf_ips
   alb_dns_name       = module.alb.dns_name
@@ -18,6 +25,9 @@ module "alb" {
   source = "./alb"
 
   name            = var.name
+  zone_id         = data.aws_route53_zone.main.zone_id
+  acm_domain_name = var.acm_domain_name
+  alb_domain_name = var.alb_domain_name
   authorized_keys = var.authorized_keys
   allow_ssh_ips   = var.allow_ssh_ips
 }

@@ -15,8 +15,18 @@ resource "aws_cloudfront_distribution" "cloudfront" {
     custom_origin_config {
       http_port              = 80
       https_port             = 443
-      origin_protocol_policy = "http-only"
+      origin_protocol_policy = "https-only"
       origin_ssl_protocols   = ["TLSv1.2"]
+    }
+
+    custom_header {
+      name  = "x-test"
+      value = "123"
+    }
+
+    custom_header {
+      name  = "x-forwarded-host"
+      value = var.cf_domain_name
     }
   }
 
@@ -44,8 +54,8 @@ resource "aws_cloudfront_distribution" "cloudfront" {
     viewer_protocol_policy = "https-only"
     target_origin_id       = var.alb_dns_name
 
-    cache_policy_id          = aws_cloudfront_cache_policy.nocache.id
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.none.id
+    cache_policy_id          = aws_cloudfront_cache_policy.alb.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.alb.id
   }
 
   ordered_cache_behavior {
@@ -67,7 +77,7 @@ resource "aws_cloudfront_distribution" "cloudfront" {
     viewer_protocol_policy = "https-only"
     target_origin_id       = var.lambda_domain_name
 
-    cache_policy_id = aws_cloudfront_cache_policy.nocache.id
+    cache_policy_id = aws_cloudfront_cache_policy.lambda.id
   }
 
   restrictions {
@@ -124,13 +134,54 @@ data "aws_cloudfront_response_headers_policy" "cors" {
   name = "Managed-SimpleCORS"
 }
 
-resource "aws_cloudfront_cache_policy" "nocache" {
-  name    = "${var.name}-nocache"
-  comment = "${var.name}-nocache"
+resource "aws_cloudfront_cache_policy" "alb" {
+  name    = "${var.name}-alb"
+  comment = "${var.name}-alb"
 
   min_ttl     = 0
   default_ttl = 0
-  max_ttl     = 3
+  max_ttl     = 1
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = "whitelist"
+      headers {
+        items = ["Host"]
+      }
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+  }
+}
+
+resource "aws_cloudfront_origin_request_policy" "alb" {
+  name    = "${var.name}-alb"
+  comment = "${var.name}-alb"
+  cookies_config {
+    cookie_behavior = "none"
+  }
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = ["Host"]
+    }
+  }
+  query_strings_config {
+    query_string_behavior = "none"
+  }
+}
+
+resource "aws_cloudfront_cache_policy" "lambda" {
+  name    = "${var.name}-lambda"
+  comment = "${var.name}-lambda"
+
+  min_ttl     = 0
+  default_ttl = 0
+  max_ttl     = 0
 
   parameters_in_cache_key_and_forwarded_to_origin {
     cookies_config {
@@ -142,78 +193,5 @@ resource "aws_cloudfront_cache_policy" "nocache" {
     query_strings_config {
       query_string_behavior = "none"
     }
-  }
-}
-
-resource "aws_cloudfront_cache_policy" "origin" {
-  name    = "${var.name}-origin"
-  comment = "${var.name}-origin"
-
-  min_ttl     = 1
-  max_ttl     = 31536000
-  default_ttl = 86400
-
-  parameters_in_cache_key_and_forwarded_to_origin {
-    cookies_config {
-      cookie_behavior = "none"
-    }
-    headers_config {
-      header_behavior = "whitelist"
-      headers {
-        items = ["origin"]
-      }
-    }
-    query_strings_config {
-      query_string_behavior = "none"
-    }
-  }
-}
-
-resource "aws_cloudfront_origin_request_policy" "none" {
-  name    = "${var.name}-none"
-  comment = "${var.name}-none"
-  cookies_config {
-    cookie_behavior = "none"
-  }
-  headers_config {
-    header_behavior = "none"
-  }
-  query_strings_config {
-    query_string_behavior = "none"
-  }
-}
-
-resource "aws_cloudfront_origin_request_policy" "origin" {
-  name    = "${var.name}-origin"
-  comment = "${var.name}-origin"
-  cookies_config {
-    cookie_behavior = "none"
-  }
-  headers_config {
-    header_behavior = "whitelist"
-    headers {
-      items = ["origin"]
-    }
-  }
-  query_strings_config {
-    query_string_behavior = "none"
-  }
-}
-
-resource "aws_cloudfront_response_headers_policy" "cors" {
-  name    = "${var.name}-cors"
-  comment = "${var.name}-cors"
-  cors_config {
-    access_control_allow_methods {
-      items = ["GET"]
-    }
-    access_control_allow_origins {
-      items = ["example.com"]
-    }
-    access_control_allow_headers {
-      items = ["*"]
-    }
-    access_control_allow_credentials = false
-    origin_override                  = true
   }
 }

@@ -26,8 +26,10 @@ resource "aws_lb_target_group" "main" {
 
 resource "aws_lb_listener" "main" {
   load_balancer_arn = aws_lb.main.arn
-  protocol          = "HTTP"
-  port              = 80
+  protocol          = "HTTPS"
+  port              = 443
+  certificate_arn   = aws_acm_certificate.main.arn
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
 
   default_action {
     target_group_arn = aws_lb_target_group.main.arn

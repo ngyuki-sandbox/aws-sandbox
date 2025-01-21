@@ -1,11 +1,14 @@
 
-
 resource "aws_route53_record" "main" {
   zone_id = var.zone_id
-  name    = "${var.cf_domain_name}."
-  type    = "CNAME"
-  ttl     = 300
-  records = [aws_cloudfront_distribution.cloudfront.domain_name]
+  name    = "${var.alb_domain_name}."
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.main.dns_name
+    zone_id                = aws_lb.main.zone_id
+    evaluate_target_health = true
+  }
 }
 
 resource "aws_route53_record" "domain_validation" {
