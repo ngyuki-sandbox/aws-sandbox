@@ -1,0 +1,7 @@
+{
+  "name": "aws-apigateway-lambda",
+  "private": true,
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.525.0"
+  }
+}
