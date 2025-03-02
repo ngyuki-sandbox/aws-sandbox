@@ -1,0 +1,26 @@
+version: 0.2
+env:
+  shell: bash
+phases:
+  install:
+    commands:
+      - curl -fsSL https://s3.dualstack.us-east-1.amazonaws.com/gitlab-runner-downloads/main/binaries/gitlab-runner-linux-amd64 -o gitlab-runner
+      - chmod +x gitlab-runner
+
+  build:
+    commands:
+      - ./gitlab-runner run-single
+          --url "$GITLAB_URL"
+          --token "$RUNNER_TOKEN"
+          --max-builds 1
+          --wait-timeout 60
+          --executor docker
+          --docker-privileged
+          --docker-helper-image public.ecr.aws/gitlab/gitlab-runner-helper:alpine-latest-x86_64-latest
+          --docker-image public.ecr.aws/docker/library/alpine:latest
+          --docker-allowed-pull-policies always
+          --docker-allowed-pull-policies never
+          --docker-allowed-pull-policies if-not-present
+          --cache-type s3
+          --cache-s3-bucket-name "$CACHE_BUCKET"
+          --cache-s3-bucket-location "$AWS_REGION"
