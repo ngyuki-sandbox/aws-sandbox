@@ -58,6 +58,37 @@ resource "aws_api_gateway_stage" "main" {
   stage_name    = var.stage_name
 }
 
+resource "aws_api_gateway_domain_name" "main" {
+  domain_name     = var.domain_name
+  certificate_arn = var.certificate_arn
+  endpoint_configuration {
+    types = ["PRIVATE"]
+  }
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect    = "Allow",
+        Principal = "*",
+        Action    = "execute-api:Invoke",
+        Resource  = "*"
+        Condition = {
+          StringEquals = {
+            "aws:SourceVpce" = var.vpce_ids
+          }
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_api_gateway_base_path_mapping" "main" {
+  api_id         = aws_api_gateway_rest_api.main.id
+  stage_name     = aws_api_gateway_stage.main.stage_name
+  domain_name    = aws_api_gateway_domain_name.main.domain_name
+  domain_name_id = aws_api_gateway_domain_name.main.domain_name_id
+}
+
 resource "aws_iam_role" "apigw" {
   name = "${var.name}-apigw"
   assume_role_policy = jsonencode({

@@ -7,10 +7,14 @@ variable "stage_name" {
   type = string
 }
 
-variable "vpc_ids" {
+variable "vpce_ids" {
   type = list(string)
 }
 
-variable "vpce_ids" {
-  type = list(string)
+variable "certificate_arn" {
+  type = string
+}
+
+variable "domain_name" {
+  type = string
 }
