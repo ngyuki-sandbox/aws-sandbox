@@ -4,13 +4,19 @@ resource "aws_codebuild_project" "main" {
   service_role = aws_iam_role.build.arn
 
   source {
-    type            = "GITHUB"
-    location        = var.github_repo
+    type = "GITHUB"
+    #location        = var.github_repo
+    location        = "CODEBUILD_DEFAULT_WEBHOOK_SOURCE_LOCATION"
     buildspec       = file("buildspec.yaml")
     git_clone_depth = 1
 
     git_submodules_config {
       fetch_submodules = false
+    }
+
+    auth {
+      resource = aws_codeconnections_connection.main.arn
+      type     = "CODECONNECTIONS"
     }
   }
 
@@ -42,6 +48,11 @@ resource "aws_codebuild_project" "main" {
   }
 }
 
+import {
+  id = "sandbox"
+  to = aws_codebuild_webhook.main
+}
+
 resource "aws_codebuild_webhook" "main" {
   project_name = aws_codebuild_project.main.name
   build_type   = "BUILD"
@@ -52,6 +63,11 @@ resource "aws_codebuild_webhook" "main" {
       pattern                 = "WORKFLOW_JOB_QUEUED"
       type                    = "EVENT"
     }
+  }
+
+  scope_configuration {
+    name  = var.github_org
+    scope = "GITHUB_ORGANIZATION"
   }
 }
 
