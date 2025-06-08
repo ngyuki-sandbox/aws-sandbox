@@ -25,7 +25,7 @@ data "aws_vpc" "default" {
 }
 
 data "aws_subnet_ids" "default" {
-  vpc_id = "${data.aws_vpc.default.id}"
+  vpc_id = data.aws_vpc.default.id
 }
 
 data "aws_security_group" "default" {
@@ -67,9 +67,9 @@ data "aws_ami" "app" {
 
 resource "aws_launch_template" "app" {
   name                   = "hello-asg-app"
-  image_id               = "${data.aws_ami.app.id}"
+  image_id               = data.aws_ami.app.id
   instance_type          = "t2.nano"
-  key_name               = "${var.key_name}"
+  key_name               = var.key_name
   vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
 
   block_device_mappings {
@@ -113,7 +113,7 @@ resource "aws_autoscaling_group" "app" {
 
 resource "aws_autoscaling_schedule" "single" {
   scheduled_action_name  = "single"
-  autoscaling_group_name = "${aws_autoscaling_group.app.name}"
+  autoscaling_group_name = aws_autoscaling_group.app.name
   recurrence             = "5-59/10 * * * *"
 
   desired_capacity = 1
@@ -123,7 +123,7 @@ resource "aws_autoscaling_schedule" "single" {
 
 resource "aws_autoscaling_schedule" "multi" {
   scheduled_action_name  = "multi"
-  autoscaling_group_name = "${aws_autoscaling_group.app.name}"
+  autoscaling_group_name = aws_autoscaling_group.app.name
   recurrence             = "0-59/10 * * * *"
 
   desired_capacity = 2

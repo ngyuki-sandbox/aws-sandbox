@@ -15,7 +15,7 @@ variable "eks_node_ami" {}
 variable "bastion_ami" {}
 
 variable "my_cidr_blocks" {
-  type = "list"
+  type = list(string)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,18 +41,18 @@ EOS
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
-  role       = "${aws_iam_role.cluster.name}"
+  role       = aws_iam_role.cluster.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSServicePolicy" {
-  role       = "${aws_iam_role.cluster.name}"
+  role       = aws_iam_role.cluster.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
 }
 
 resource "aws_iam_instance_profile" "node" {
   name = "hello-eks-node"
-  role = "${aws_iam_role.node.name}"
+  role = aws_iam_role.node.name
 }
 
 resource "aws_iam_role" "node" {
@@ -75,17 +75,17 @@ EOS
 }
 
 resource "aws_iam_role_policy_attachment" "profile_AmazonEKSWorkerNodePolicy" {
-  role       = "${aws_iam_role.node.name}"
+  role       = aws_iam_role.node.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 }
 
 resource "aws_iam_role_policy_attachment" "profile_AmazonEKS_CNI_Policy" {
-  role       = "${aws_iam_role.node.name}"
+  role       = aws_iam_role.node.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
 resource "aws_iam_role_policy_attachment" "profile_AmazonEC2ContainerRegistryReadOnly" {
-  role       = "${aws_iam_role.node.name}"
+  role       = aws_iam_role.node.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
@@ -112,10 +112,10 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public" {
-  count             = "${length(local.availability_zones)}"
-  vpc_id            = "${aws_vpc.main.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
-  availability_zone = "${local.availability_zones[count.index]}"
+  count             = length(local.availability_zones)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)
+  availability_zone = local.availability_zones[count.index]
 
   tags = {
     Name                              = "hello-eks-public"
@@ -124,10 +124,10 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  count             = "${length(local.availability_zones)}"
-  vpc_id            = "${aws_vpc.main.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index + length(local.availability_zones))}"
-  availability_zone = "${local.availability_zones[count.index]}"
+  count             = length(local.availability_zones)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index + length(local.availability_zones))
+  availability_zone = local.availability_zones[count.index]
 
   tags = {
     Name                              = "hello-eks-private"
@@ -136,7 +136,7 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_internet_gateway" "igw" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   tags = {
     Name = "hello-eks"
@@ -144,7 +144,7 @@ resource "aws_internet_gateway" "igw" {
 }
 
 resource "aws_eip" "nat" {
-  count = "${length(local.availability_zones)}"
+  count = length(local.availability_zones)
   vpc   = true
 
   tags = {
@@ -153,9 +153,9 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "ngw" {
-  count         = "${length(local.availability_zones)}"
-  subnet_id     = "${element(aws_subnet.public.*.id, count.index)}"
-  allocation_id = "${element(aws_eip.nat.*.id, count.index)}"
+  count         = length(local.availability_zones)
+  subnet_id     = element(aws_subnet.public.*.id, count.index)
+  allocation_id = element(aws_eip.nat.*.id, count.index)
 
   tags = {
     Name = "hello-eks"
@@ -163,14 +163,14 @@ resource "aws_nat_gateway" "ngw" {
 }
 
 resource "aws_route" "main" {
-  route_table_id         = "${aws_vpc.main.main_route_table_id}"
+  route_table_id         = aws_vpc.main.main_route_table_id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = "${aws_internet_gateway.igw.id}"
+  gateway_id             = aws_internet_gateway.igw.id
 }
 
 resource "aws_route_table" "private" {
-  count  = "${length(local.availability_zones)}"
-  vpc_id = "${aws_vpc.main.id}"
+  count  = length(local.availability_zones)
+  vpc_id = aws_vpc.main.id
 
   tags = {
     Name = "hello-eks-private"
@@ -178,70 +178,70 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route" "private" {
-  count                  = "${length(local.availability_zones)}"
-  route_table_id         = "${element(aws_route_table.private.*.id, count.index)}"
+  count                  = length(local.availability_zones)
+  route_table_id         = element(aws_route_table.private.*.id, count.index)
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = "${element(aws_nat_gateway.ngw.*.id, count.index)}"
+  nat_gateway_id         = element(aws_nat_gateway.ngw.*.id, count.index)
 }
 
 resource "aws_route_table_association" "private" {
-  count          = "${length(local.availability_zones)}"
-  subnet_id      = "${element(aws_subnet.private.*.id, count.index)}"
-  route_table_id = "${element(aws_route_table.private.*.id, count.index)}"
+  count          = length(local.availability_zones)
+  subnet_id      = element(aws_subnet.private.*.id, count.index)
+  route_table_id = element(aws_route_table.private.*.id, count.index)
 }
 
 resource "aws_security_group" "control" {
   name        = "hello-eks-control"
   description = "hello-eks-control"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 }
 
 resource "aws_security_group_rule" "control_from_node" {
-  security_group_id        = "${aws_security_group.control.id}"
+  security_group_id        = aws_security_group.control.id
   type                     = "ingress"
   from_port                = 443
   to_port                  = 443
   protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.node.id}"
+  source_security_group_id = aws_security_group.node.id
 }
 
 resource "aws_security_group_rule" "control_to_node_443" {
- security_group_id        = "${aws_security_group.control.id}"
- type                     = "egress"
- from_port                = 443
- to_port                  = 443
- protocol                 = "tcp"
- source_security_group_id = "${aws_security_group.node.id}"
+  security_group_id        = aws_security_group.control.id
+  type                     = "egress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.node.id
 }
 
 resource "aws_security_group_rule" "control_to_node_1025" {
-  security_group_id        = "${aws_security_group.control.id}"
+  security_group_id        = aws_security_group.control.id
   type                     = "egress"
   from_port                = 1025
   to_port                  = 65535
   protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.node.id}"
+  source_security_group_id = aws_security_group.node.id
 }
 
 resource "aws_security_group" "node" {
   name        = "hello-eks-node"
   description = "hello-eks-node"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   tags = {
     "kubernetes.io/cluster/hello-eks" = "owned"
   }
 
   egress = {
-    from_port         = 0
-    to_port           = 0
-    protocol          = -1
-    cidr_blocks       = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_security_group_rule" "node_self" {
-  security_group_id = "${aws_security_group.node.id}"
+  security_group_id = aws_security_group.node.id
   type              = "ingress"
   from_port         = 0
   to_port           = 0
@@ -250,36 +250,36 @@ resource "aws_security_group_rule" "node_self" {
 }
 
 resource "aws_security_group_rule" "node_from_control_443" {
-  security_group_id        = "${aws_security_group.node.id}"
+  security_group_id        = aws_security_group.node.id
   type                     = "ingress"
   from_port                = 443
   to_port                  = 443
   protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.control.id}"
+  source_security_group_id = aws_security_group.control.id
 }
 
 resource "aws_security_group_rule" "node_from_control_1025" {
-  security_group_id        = "${aws_security_group.node.id}"
+  security_group_id        = aws_security_group.node.id
   type                     = "ingress"
   from_port                = 1025
   to_port                  = 65535
   protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.control.id}"
+  source_security_group_id = aws_security_group.control.id
 }
 
 resource "aws_security_group_rule" "node_from_bastion" {
-  security_group_id        = "${aws_security_group.node.id}"
+  security_group_id        = aws_security_group.node.id
   type                     = "ingress"
   from_port                = 22
   to_port                  = 22
   protocol                 = "tcp"
-  source_security_group_id = "${aws_security_group.bastion.id}"
+  source_security_group_id = aws_security_group.bastion.id
 }
 
 resource "aws_security_group" "bastion" {
   name        = "hello-eks-bastion"
   description = "hello-eks-bastion"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port   = 22
@@ -301,7 +301,7 @@ resource "aws_security_group" "bastion" {
 
 resource "aws_eks_cluster" "cluster" {
   name     = "hello-eks"
-  role_arn = "${aws_iam_role.cluster.arn}"
+  role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     subnet_ids         = ["${aws_subnet.public.*.id}", "${aws_subnet.private.*.id}"]
@@ -314,10 +314,10 @@ resource "aws_eks_cluster" "cluster" {
 
 resource "aws_launch_configuration" "node" {
   name_prefix          = "hello-eks-"
-  image_id             = "${var.eks_node_ami}"
+  image_id             = var.eks_node_ami
   instance_type        = "t2.nano"
-  key_name             = "${var.ec2_key_name}"
-  iam_instance_profile = "${aws_iam_instance_profile.node.id}"
+  key_name             = var.ec2_key_name
+  iam_instance_profile = aws_iam_instance_profile.node.id
   security_groups      = ["${aws_security_group.node.id}"]
 
   root_block_device = {
@@ -341,7 +341,7 @@ resource "aws_autoscaling_group" "node" {
   desired_capacity     = 3
   max_size             = 3
   min_size             = 1
-  launch_configuration = "${aws_launch_configuration.node.name}"
+  launch_configuration = aws_launch_configuration.node.name
   vpc_zone_identifier  = ["${aws_subnet.private.*.id}"]
 
   tag {
@@ -369,13 +369,13 @@ resource "aws_autoscaling_group" "node" {
 // EC2
 
 resource "aws_instance" "bastion" {
-  availability_zone           = "${local.availability_zones[0]}"
-  ami                         = "${var.bastion_ami}"
+  availability_zone           = local.availability_zones[0]
+  ami                         = var.bastion_ami
   instance_type               = "t3.nano"
-  key_name                    = "${var.ec2_key_name}"
+  key_name                    = var.ec2_key_name
   monitoring                  = false
   vpc_security_group_ids      = ["${aws_security_group.bastion.id}"]
-  subnet_id                   = "${aws_subnet.public.*.id[0]}"
+  subnet_id                   = aws_subnet.public.*.id[0]
   associate_public_ip_address = true
 
   tags {
@@ -392,9 +392,9 @@ resource "aws_instance" "bastion" {
 // Output
 
 output "aws_iam_role.node.arn" {
-  value = "${aws_iam_role.node.arn}"
+  value = aws_iam_role.node.arn
 }
 
 output "aws_instance.bastion.public_ip" {
-  value = "${aws_instance.bastion.public_ip}"
+  value = aws_instance.bastion.public_ip
 }

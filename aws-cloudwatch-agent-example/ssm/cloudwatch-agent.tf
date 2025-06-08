@@ -33,13 +33,13 @@ EOS
 }
 
 resource "aws_iam_role_policy_attachment" "ec2_CloudWatchAgentServerPolicy" {
-  role       = "${aws_iam_role.ec2.name}"
+  role       = aws_iam_role.ec2.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
 resource "aws_iam_instance_profile" "ec2" {
   name = "hello-cwagent"
-  role = "${aws_iam_role.ec2.name}"
+  role = aws_iam_role.ec2.name
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ data "aws_vpc" "default" {
 }
 
 data "aws_subnet_ids" "default" {
-  vpc_id = "${data.aws_vpc.default.id}"
+  vpc_id = data.aws_vpc.default.id
 }
 
 data "aws_security_group" "default" {
@@ -63,7 +63,7 @@ data "aws_security_group" "default" {
 resource "aws_ssm_parameter" "cwagent" {
   name  = "AmazonCloudWatch-AgentConfig"
   type  = "String"
-  value = "${file("amazon-cloudwatch-agent.json")}"
+  value = file("amazon-cloudwatch-agent.json")
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,15 +101,15 @@ data "aws_ami" "app" {
 
 resource "aws_instance" "app" {
   count                       = 2
-  ami                         = "${data.aws_ami.app.id}"
+  ami                         = data.aws_ami.app.id
   instance_type               = "t2.nano"
-  key_name                    = "${var.key_name}"
-  iam_instance_profile        = "${aws_iam_instance_profile.ec2.name}"
-  subnet_id                   = "${data.aws_subnet_ids.default.ids[count.index]}"
+  key_name                    = var.key_name
+  iam_instance_profile        = aws_iam_instance_profile.ec2.name
+  subnet_id                   = data.aws_subnet_ids.default.ids[count.index]
   vpc_security_group_ids      = ["${data.aws_security_group.default.id}"]
   associate_public_ip_address = true
 
-  user_data = "${file("user_data.yaml")}"
+  user_data = file("user_data.yaml")
 
   tags {
     Name = "hello-cwagent"
@@ -125,5 +125,5 @@ resource "aws_instance" "app" {
 }
 
 output "aws_instance.app.public_ip" {
-  value = "${aws_instance.app.*.public_ip}"
+  value = aws_instance.app.*.public_ip
 }

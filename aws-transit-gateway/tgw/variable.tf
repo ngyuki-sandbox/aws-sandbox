@@ -1,10 +1,10 @@
 ################################################################################
 # variable
 
-variable tag {}
+variable "tag" {}
 
-variable requestor_region {}
-variable requestor_cidrs {}
+variable "requestor_region" {}
+variable "requestor_cidrs" {}
 
-variable accepter_region {}
-variable accepter_cidrs {}
+variable "accepter_region" {}
+variable "accepter_cidrs" {}

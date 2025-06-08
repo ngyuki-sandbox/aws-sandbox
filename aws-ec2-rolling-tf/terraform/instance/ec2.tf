@@ -8,7 +8,7 @@ resource "aws_instance" "this" {
   vpc_security_group_ids = var.vpc_security_group_ids
   subnet_id              = var.subnet_id
 
-  user_data                   = <<-EOS
+  user_data = <<-EOS
     #cloud-config
     timezone: "Asia/Tokyo"
     ssh_authorized_keys: ${jsonencode(var.authorized_keys)}
@@ -49,9 +49,9 @@ resource "aws_lb_target_group_attachment" "this" {
       fi
     EOF
     environment = {
-      wait = var.wait
+      wait             = var.wait
       target_group_arn = self.target_group_arn
-      target_id = self.target_id
+      target_id        = self.target_id
     }
   }
 }

@@ -1,7 +1,7 @@
 ################################################################################
 # VPC Endpoint
 
-resource aws_vpc_endpoint ssm {
+resource "aws_vpc_endpoint" "ssm" {
   vpc_id              = aws_vpc.main.id
   service_name        = "com.amazonaws.${var.region}.ssm"
   vpc_endpoint_type   = "Interface"
@@ -20,7 +20,7 @@ resource aws_vpc_endpoint ssm {
   }
 }
 
-resource aws_vpc_endpoint ssmmessages {
+resource "aws_vpc_endpoint" "ssmmessages" {
   vpc_id              = aws_vpc.main.id
   service_name        = "com.amazonaws.${var.region}.ssmmessages"
   vpc_endpoint_type   = "Interface"
@@ -39,7 +39,7 @@ resource aws_vpc_endpoint ssmmessages {
   }
 }
 
-resource aws_vpc_endpoint smtp {
+resource "aws_vpc_endpoint" "smtp" {
   vpc_id              = aws_vpc.main.id
   service_name        = "com.amazonaws.${var.region}.email-smtp"
   vpc_endpoint_type   = "Interface"
@@ -58,6 +58,6 @@ resource aws_vpc_endpoint smtp {
   }
 }
 
-output vpc_endpoint_smtp_dns_name {
+output "vpc_endpoint_smtp_dns_name" {
   value = aws_vpc_endpoint.smtp.dns_entry[0].dns_name
 }

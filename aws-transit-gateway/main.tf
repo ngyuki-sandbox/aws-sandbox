@@ -1,6 +1,6 @@
-variable key_name {}
+variable "key_name" {}
 
-module tgw {
+module "tgw" {
   source = "./tgw"
   tag    = "tgw"
 
@@ -11,7 +11,7 @@ module tgw {
   accepter_cidrs  = ["10.101.0.0/16", "10.102.0.0/16"]
 }
 
-module oregon_vpc {
+module "oregon_vpc" {
   source         = "./vpc"
   tag            = "tgw-oregon-vpc"
   region         = "us-west-2"
@@ -23,7 +23,7 @@ module oregon_vpc {
   transit_gateway_routes = ["10.101.0.0/16", "10.102.0.0/16"]
 }
 
-module tokyo_vpc_1 {
+module "tokyo_vpc_1" {
   source         = "./vpc"
   tag            = "tgw-tokyo-vpc-1"
   region         = "ap-northeast-1"
@@ -35,7 +35,7 @@ module tokyo_vpc_1 {
   transit_gateway_routes = ["10.100.0.0/16", "10.102.0.0/16"]
 }
 
-module tokyo_vpc_2 {
+module "tokyo_vpc_2" {
   source         = "./vpc"
   tag            = "tgw-tokyo-vpc-2"
   region         = "ap-northeast-1"
@@ -47,7 +47,7 @@ module tokyo_vpc_2 {
   transit_gateway_routes = ["10.100.0.0/16", "10.101.0.0/16"]
 }
 
-output instances {
+output "instances" {
   value = {
     oregon = module.oregon_vpc.instances
     vpc_1  = module.tokyo_vpc_1.instances

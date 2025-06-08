@@ -25,7 +25,7 @@ data "aws_vpc" "default" {
 }
 
 data "aws_subnet_ids" "default" {
-  vpc_id = "${data.aws_vpc.default.id}"
+  vpc_id = data.aws_vpc.default.id
 }
 
 data "aws_security_group" "default" {
@@ -54,11 +54,11 @@ EOS
 
 resource "aws_launch_configuration" "app" {
   name_prefix     = "hello-asg-app-"
-  image_id        = "${data.aws_ami.app.id}"
+  image_id        = data.aws_ami.app.id
   instance_type   = "t2.nano"
-  key_name        = "${var.key_name}"
+  key_name        = var.key_name
   security_groups = ["${data.aws_security_group.default.id}"]
-  user_data       = "${local.user_data}"
+  user_data       = local.user_data
 
   root_block_device {
     volume_size           = 8
@@ -73,11 +73,11 @@ resource "aws_launch_configuration" "app" {
 
 resource "aws_launch_template" "app" {
   name                   = "hello-asg-app"
-  image_id               = "${data.aws_ami.app.id}"
+  image_id               = data.aws_ami.app.id
   instance_type          = "t2.nano"
-  key_name               = "${var.key_name}"
+  key_name               = var.key_name
   vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
-  user_data              = "${base64encode(local.user_data)}"
+  user_data              = base64encode(local.user_data)
 
   block_device_mappings {
     device_name = "/dev/xvda"
@@ -141,7 +141,7 @@ resource "aws_lb_target_group" "app" {
   name     = "hello-asg-app"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = "${data.aws_vpc.default.id}"
+  vpc_id   = data.aws_vpc.default.id
 
   health_check {
     protocol            = "HTTP"
@@ -154,12 +154,12 @@ resource "aws_lb_target_group" "app" {
 }
 
 resource "aws_lb_listener" "app" {
-  load_balancer_arn = "${aws_lb.app.arn}"
+  load_balancer_arn = aws_lb.app.arn
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.app.arn}"
+    target_group_arn = aws_lb_target_group.app.arn
     type             = "forward"
   }
 }

@@ -5,20 +5,20 @@ terraform {
   required_version = ">=0.12.0"
 }
 
-provider aws {
+provider "aws" {
   region = "ap-northeast-1"
 }
 
-variable key_name {}
+variable "key_name" {}
 
-variable tag {
+variable "tag" {
   default = "datasync-example"
 }
 
 ################################################################################
 # IAM Role datasync for s3
 
-resource aws_iam_role datasync_s3 {
+resource "aws_iam_role" "datasync_s3" {
   name = "${var.tag}-datasync_s3"
 
   assume_role_policy = <<-EOS
@@ -37,7 +37,7 @@ resource aws_iam_role datasync_s3 {
   EOS
 }
 
-resource aws_iam_role_policy datasync_s3 {
+resource "aws_iam_role_policy" "datasync_s3" {
   name = "${var.tag}-datasync_s3"
   role = aws_iam_role.datasync_s3.id
 
@@ -74,17 +74,17 @@ resource aws_iam_role_policy datasync_s3 {
 ################################################################################
 # VPC
 
-data aws_vpc vpc {
+data "aws_vpc" "vpc" {
   default = true
 }
 
-data aws_subnet subnet_a {
+data "aws_subnet" "subnet_a" {
   vpc_id            = data.aws_vpc.vpc.id
   availability_zone = "ap-northeast-1a"
 
 }
 
-data aws_security_group default {
+data "aws_security_group" "default" {
   vpc_id = data.aws_vpc.vpc.id
   name   = "default"
 }
@@ -92,7 +92,7 @@ data aws_security_group default {
 ################################################################################
 # EFS
 
-resource aws_efs_file_system efs {
+resource "aws_efs_file_system" "efs" {
   lifecycle_policy {
     transition_to_ia = "AFTER_7_DAYS"
   }
@@ -102,7 +102,7 @@ resource aws_efs_file_system efs {
   }
 }
 
-resource aws_efs_mount_target efs_a {
+resource "aws_efs_mount_target" "efs_a" {
   file_system_id  = aws_efs_file_system.efs.id
   subnet_id       = data.aws_subnet.subnet_a.id
   security_groups = [data.aws_security_group.default.id]
@@ -111,7 +111,7 @@ resource aws_efs_mount_target efs_a {
 ################################################################################
 # S3
 
-resource aws_s3_bucket bucket {
+resource "aws_s3_bucket" "bucket" {
   bucket_prefix = "${var.tag}-bucket-"
   acl           = "private"
   force_destroy = true
@@ -124,15 +124,15 @@ resource aws_s3_bucket bucket {
 ################################################################################
 # EC2
 
-data aws_ssm_parameter ami_amazon_linux {
+data "aws_ssm_parameter" "ami_amazon_linux" {
   name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 }
 
-data aws_iam_instance_profile ec2 {
+data "aws_iam_instance_profile" "ec2" {
   name = "AmazonSSMRoleForInstancesQuickSetup"
 }
 
-resource aws_instance amazon_linux {
+resource "aws_instance" "amazon_linux" {
   ami                    = data.aws_ssm_parameter.ami_amazon_linux.value
   instance_type          = "t2.nano"
   key_name               = var.key_name
@@ -152,18 +152,18 @@ resource aws_instance amazon_linux {
   }
 }
 
-output amazon_linux {
+output "amazon_linux" {
   value = {
     instance_id = aws_instance.amazon_linux.id
     public_ip   = aws_instance.amazon_linux.public_ip
   }
 }
 
-data aws_ssm_parameter ami_datasync_agent {
+data "aws_ssm_parameter" "ami_datasync_agent" {
   name = "/aws/service/datasync/ami"
 }
 
-resource aws_instance datasync_agent {
+resource "aws_instance" "datasync_agent" {
   ami                    = data.aws_ssm_parameter.ami_datasync_agent.value
   instance_type          = "m5.2xlarge"
   key_name               = var.key_name
@@ -178,7 +178,7 @@ resource aws_instance datasync_agent {
 ################################################################################
 # DataSync
 
-resource aws_datasync_agent datasync {
+resource "aws_datasync_agent" "datasync" {
   name       = "${var.tag}-datasync"
   ip_address = aws_instance.datasync_agent.public_ip
 
@@ -187,7 +187,7 @@ resource aws_datasync_agent datasync {
   }
 }
 
-resource aws_datasync_location_nfs location_nfs {
+resource "aws_datasync_location_nfs" "location_nfs" {
   server_hostname = aws_efs_mount_target.efs_a.ip_address
   subdirectory    = "/"
 
@@ -200,7 +200,7 @@ resource aws_datasync_location_nfs location_nfs {
   }
 }
 
-resource aws_datasync_location_s3 location_s3 {
+resource "aws_datasync_location_s3" "location_s3" {
   s3_bucket_arn = aws_s3_bucket.bucket.arn
   subdirectory  = "/sync"
 
@@ -213,7 +213,7 @@ resource aws_datasync_location_s3 location_s3 {
   }
 }
 
-resource aws_datasync_task efs_to_s3 {
+resource "aws_datasync_task" "efs_to_s3" {
   name = "${var.tag}-efs_to_s3"
 
   source_location_arn      = aws_datasync_location_nfs.location_nfs.arn
@@ -236,12 +236,12 @@ resource aws_datasync_task efs_to_s3 {
 ################################################################################
 # Cloudwatch Log
 
-resource aws_cloudwatch_log_group efs_to_s3 {
+resource "aws_cloudwatch_log_group" "efs_to_s3" {
   name              = "/${var.tag}/efs-to-s3"
   retention_in_days = 1
 }
 
-resource aws_cloudwatch_log_resource_policy efs_to_s3 {
+resource "aws_cloudwatch_log_resource_policy" "efs_to_s3" {
   policy_name     = "${var.tag}-efs_to_s3"
   policy_document = <<-EOS
     {

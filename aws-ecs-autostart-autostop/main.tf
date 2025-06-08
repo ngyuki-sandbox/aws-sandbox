@@ -27,9 +27,9 @@ module "review" {
   image             = each.value.image
   listener_priority = each.value.priority
 
-  vpc_id               = module.vpc.vpc_id
-  subnet_ids           = module.vpc.subnet_ids
-  security_group_ids   = [module.vpc.security_group_id]
+  vpc_id             = module.vpc.vpc_id
+  subnet_ids         = module.vpc.subnet_ids
+  security_group_ids = [module.vpc.security_group_id]
 
   cluster_id           = module.common.cluster_id
   cluster_arn          = module.common.cluster_arn

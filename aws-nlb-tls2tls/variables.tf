@@ -2,14 +2,14 @@
 # variables
 
 
-variable profile {}
-variable region {}
-variable key_name {}
-variable tag {}
-variable zone_domain {}
-variable service_domain {}
-variable server_domain {}
-variable trusted_cidr {}
+variable "profile" {}
+variable "region" {}
+variable "key_name" {}
+variable "tag" {}
+variable "zone_domain" {}
+variable "service_domain" {}
+variable "server_domain" {}
+variable "trusted_cidr" {}
 
 locals {
   profile        = var.profile

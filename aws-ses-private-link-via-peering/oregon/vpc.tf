@@ -1,7 +1,7 @@
 ################################################################################
 # VPC
 
-resource aws_vpc main {
+resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr_block
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -10,14 +10,14 @@ resource aws_vpc main {
   }
 }
 
-output vpc_id {
+output "vpc_id" {
   value = aws_vpc.main.id
 }
 
 ################################################################################
 # Subnet
 
-resource aws_subnet back_a {
+resource "aws_subnet" "back_a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = cidrsubnet(var.vpc_cidr_block, 8, 100)
   availability_zone = var.availability_zone_a
@@ -29,7 +29,7 @@ resource aws_subnet back_a {
 ################################################################################
 # Security Group
 
-resource aws_security_group sg {
+resource "aws_security_group" "sg" {
   vpc_id      = aws_vpc.main.id
   name        = "${var.tag_prefix}-sg"
   description = "${var.tag_prefix}-sg"

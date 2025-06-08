@@ -15,7 +15,7 @@ variable "key_name" {}
 
 resource "aws_iam_instance_profile" "instance" {
   name = "hello-asg-instance"
-  role = "${aws_iam_role.instance.id}"
+  role = aws_iam_role.instance.id
 }
 
 resource "aws_iam_role" "instance" {
@@ -39,7 +39,7 @@ EOS
 
 resource "aws_iam_role_policy" "instance" {
   name = "hello-asg-instance"
-  role = "${aws_iam_role.instance.id}"
+  role = aws_iam_role.instance.id
 
   policy = <<EOF
 {
@@ -73,7 +73,7 @@ data "aws_vpc" "default" {
 }
 
 data "aws_subnet_ids" "default" {
-  vpc_id = "${data.aws_vpc.default.id}"
+  vpc_id = data.aws_vpc.default.id
 }
 
 data "aws_security_group" "default" {
@@ -143,14 +143,14 @@ EOS
 
 resource "aws_launch_template" "app" {
   name                   = "hello-asg-app"
-  image_id               = "${data.aws_ami.app.id}"
+  image_id               = data.aws_ami.app.id
   instance_type          = "t2.nano"
-  key_name               = "${var.key_name}"
+  key_name               = var.key_name
   vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
-  user_data              = "${base64encode(local.user_data)}"
+  user_data              = base64encode(local.user_data)
 
   iam_instance_profile {
-    name = "${aws_iam_instance_profile.instance.name}"
+    name = aws_iam_instance_profile.instance.name
   }
 
   block_device_mappings {

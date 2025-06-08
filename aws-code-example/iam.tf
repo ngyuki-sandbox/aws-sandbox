@@ -44,7 +44,7 @@ resource "aws_iam_role" "build_role" {
       Action : "sts:AssumeRole",
       Effect : "Allow",
       Principal : {
-        Service: "codebuild.amazonaws.com"
+        Service : "codebuild.amazonaws.com"
       }
     }]
   })
@@ -95,7 +95,7 @@ resource "aws_iam_role" "pipeline_role" {
       Action : "sts:AssumeRole",
       Effect : "Allow",
       Principal : {
-        Service: "codepipeline.amazonaws.com",
+        Service : "codepipeline.amazonaws.com",
       }
     }
   })
@@ -154,7 +154,7 @@ resource "aws_iam_role" "start_pipeline_role" {
       Action : "sts:AssumeRole",
       Effect : "Allow",
       Principal : {
-        Service: "events.amazonaws.com"
+        Service : "events.amazonaws.com"
       }
     }]
   })

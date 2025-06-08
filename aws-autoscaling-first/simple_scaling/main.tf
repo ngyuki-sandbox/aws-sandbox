@@ -25,7 +25,7 @@ data "aws_vpc" "default" {
 }
 
 data "aws_subnet_ids" "default" {
-  vpc_id = "${data.aws_vpc.default.id}"
+  vpc_id = data.aws_vpc.default.id
 }
 
 data "aws_security_group" "default" {
@@ -67,9 +67,9 @@ data "aws_ami" "app" {
 
 resource "aws_launch_template" "app" {
   name                   = "hello-asg-app"
-  image_id               = "${data.aws_ami.app.id}"
+  image_id               = data.aws_ami.app.id
   instance_type          = "t2.nano"
-  key_name               = "${var.key_name}"
+  key_name               = var.key_name
   vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
 
   monitoring {
@@ -117,7 +117,7 @@ resource "aws_autoscaling_group" "app" {
 
 // スケールアウトのポリシー
 resource "aws_autoscaling_policy" "scaleout" {
-  autoscaling_group_name = "${aws_autoscaling_group.app.name}"
+  autoscaling_group_name = aws_autoscaling_group.app.name
   policy_type            = "SimpleScaling"
   name                   = "scaleout"
   cooldown               = 60
@@ -131,7 +131,7 @@ resource "aws_autoscaling_policy" "scaleout" {
 
 // スケールインのポリシー
 resource "aws_autoscaling_policy" "scalein" {
-  autoscaling_group_name = "${aws_autoscaling_group.app.name}"
+  autoscaling_group_name = aws_autoscaling_group.app.name
   policy_type            = "SimpleScaling"
   name                   = "scalein"
   cooldown               = 60
@@ -152,7 +152,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   period      = "60"
 
   dimensions {
-    AutoScalingGroupName = "${aws_autoscaling_group.app.name}"
+    AutoScalingGroupName = aws_autoscaling_group.app.name
   }
 
   //  40% より大きいが 3 回続いたらアラーム
@@ -173,7 +173,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
   period      = "60"
 
   dimensions {
-    AutoScalingGroupName = "${aws_autoscaling_group.app.name}"
+    AutoScalingGroupName = aws_autoscaling_group.app.name
   }
 
   //  30% より小さいが 5 回続いたらアラーム

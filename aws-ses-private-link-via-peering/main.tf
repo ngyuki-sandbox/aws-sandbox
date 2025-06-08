@@ -1,11 +1,11 @@
-module common {
+module "common" {
   source     = "./common"
   tag_prefix = "ses-private-link-peering-common"
 }
 
-variable key_name {}
+variable "key_name" {}
 
-module oregon {
+module "oregon" {
   source               = "./oregon"
   tag_prefix           = "ses-private-link-peering-oregon"
   region               = "us-west-2"
@@ -23,7 +23,7 @@ module oregon {
   smtp_password        = module.common.smtp_access_key.ses_smtp_password
 }
 
-module tokyo {
+module "tokyo" {
   source                = "./tokyo"
   tag_prefix            = "ses-private-link-peering-tokyo"
   region                = "ap-northeast-1"

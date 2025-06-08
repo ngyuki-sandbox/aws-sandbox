@@ -3,11 +3,11 @@ resource "aws_kinesis_firehose_delivery_stream" "firehose" {
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn            = aws_iam_role.firehose.arn
-    bucket_arn          = aws_s3_bucket.s3.arn
-    buffer_size         = 1
-    buffer_interval     = 60
-    compression_format  = "UNCOMPRESSED"
+    role_arn           = aws_iam_role.firehose.arn
+    bucket_arn         = aws_s3_bucket.s3.arn
+    buffer_size        = 1
+    buffer_interval    = 60
+    compression_format = "UNCOMPRESSED"
 
     processing_configuration {
       enabled = true
@@ -39,7 +39,7 @@ resource "aws_kinesis_firehose_delivery_stream" "firehose" {
 }
 
 resource "aws_cloudwatch_log_group" "firehose" {
-  name = "${var.name}-firehose-log"
+  name              = "${var.name}-firehose-log"
   retention_in_days = 1
 }
 
@@ -85,12 +85,12 @@ resource "aws_iam_role_policy" "firehose" {
         ]
       },
       {
-          "Effect": "Allow",
-          "Action": [
-              "lambda:InvokeFunction",
-              "lambda:GetFunctionConfiguration",
-          ],
-          "Resource": aws_lambda_function.lambda.arn,
+        "Effect" : "Allow",
+        "Action" : [
+          "lambda:InvokeFunction",
+          "lambda:GetFunctionConfiguration",
+        ],
+        "Resource" : aws_lambda_function.lambda.arn,
       },
       {
         "Effect" : "Allow",

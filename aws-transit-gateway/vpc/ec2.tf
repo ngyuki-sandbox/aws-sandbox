@@ -1,15 +1,15 @@
 ################################################################################
 # EC2
 
-data aws_ssm_parameter ami_amazon_linux {
+data "aws_ssm_parameter" "ami_amazon_linux" {
   name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 }
 
-data aws_iam_instance_profile ec2 {
+data "aws_iam_instance_profile" "ec2" {
   name = "AmazonSSMRoleForInstancesQuickSetup"
 }
 
-resource aws_instance server {
+resource "aws_instance" "server" {
   ami                         = data.aws_ssm_parameter.ami_amazon_linux.value
   key_name                    = var.key_name
   instance_type               = "t3.nano"

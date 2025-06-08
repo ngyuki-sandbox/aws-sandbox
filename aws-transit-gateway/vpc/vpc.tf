@@ -1,7 +1,7 @@
 ################################################################################
 # VPC
 
-resource aws_vpc main {
+resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr_block
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -10,14 +10,14 @@ resource aws_vpc main {
   }
 }
 
-output vpc_id {
+output "vpc_id" {
   value = aws_vpc.main.id
 }
 
 ################################################################################
 # internet_gateway
 
-resource aws_internet_gateway igw {
+resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
@@ -28,12 +28,12 @@ resource aws_internet_gateway igw {
 ################################################################################
 # Subnet
 
-data aws_availability_zones available {
+data "aws_availability_zones" "available" {
   state            = "available"
   exclude_zone_ids = ["apne1-az3"]
 }
 
-resource aws_subnet subnets {
+resource "aws_subnet" "subnets" {
   count             = length(data.aws_availability_zones.available.names)
   vpc_id            = aws_vpc.main.id
   cidr_block        = cidrsubnet(var.vpc_cidr_block, 8, 100 + count.index)
@@ -46,7 +46,7 @@ resource aws_subnet subnets {
 ################################################################################
 # Security Group
 
-resource aws_security_group sg {
+resource "aws_security_group" "sg" {
   vpc_id      = aws_vpc.main.id
   name        = "${var.tag}-sg"
   description = "${var.tag}-sg"

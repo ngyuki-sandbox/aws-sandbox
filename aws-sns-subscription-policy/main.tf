@@ -36,7 +36,7 @@ resource "aws_sns_topic_subscription" "main" {
   endpoint            = var.email
   filter_policy_scope = "MessageAttributes"
   filter_policy = jsonencode({
-    "source" : ["aaa","bbb"],
+    "source" : ["aaa", "bbb"],
     }
   )
 }

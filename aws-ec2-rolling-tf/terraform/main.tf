@@ -82,9 +82,9 @@ resource "aws_security_group" "web" {
   }
 
   ingress {
-    from_port = 22
-    to_port   = 22
-    protocol  = "tcp"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     cidr_blocks = var.allow_ssh_ingress
   }
 
@@ -110,9 +110,9 @@ resource "aws_security_group" "web" {
 ################################################################################
 
 resource "aws_lb" "this" {
-  name                             = "${local.name}-lb"
-  load_balancer_type               = "application"
-  ip_address_type                  = "ipv4"
+  name               = "${local.name}-lb"
+  load_balancer_type = "application"
+  ip_address_type    = "ipv4"
 
   security_groups = [aws_security_group.lb.id]
   subnets         = module.vpc.public_subnets
@@ -147,11 +147,11 @@ resource "aws_lb_target_group" "web" {
   vpc_id   = module.vpc.vpc_id
 
   health_check {
-    protocol            = "HTTP"
-    path                = "/index.html"
-    matcher             = "200-399"
-    interval            = 10
-    timeout             = 5
+    protocol = "HTTP"
+    path     = "/index.html"
+    matcher  = "200-399"
+    interval = 10
+    timeout  = 5
   }
 
   lifecycle {
@@ -171,7 +171,7 @@ resource "null_resource" "web" {
       fi
     EOF
     environment = {
-      wait = var.wait
+      wait             = var.wait
       target_group_arn = aws_lb_target_group.web.arn
     }
   }
@@ -222,7 +222,7 @@ locals {
 ################################################################################
 
 module "instance" {
-  source = "./instance"
+  source   = "./instance"
   for_each = { for i, v in module.vpc.public_subnets : module.vpc.public_subnets_cidr_blocks[i] => v }
 
   name                   = "${local.name}-${each.key}"

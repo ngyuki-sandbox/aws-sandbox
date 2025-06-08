@@ -25,7 +25,7 @@ data "aws_vpc" "default" {
 }
 
 data "aws_subnet_ids" "default" {
-  vpc_id = "${data.aws_vpc.default.id}"
+  vpc_id = data.aws_vpc.default.id
 }
 
 data "aws_security_group" "default" {
@@ -67,9 +67,9 @@ data "aws_ami" "app" {
 
 resource "aws_launch_template" "app" {
   name                   = "hello-asg-app"
-  image_id               = "${data.aws_ami.app.id}"
+  image_id               = data.aws_ami.app.id
   instance_type          = "t2.nano"
-  key_name               = "${var.key_name}"
+  key_name               = var.key_name
   vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
 
   monitoring {
@@ -116,7 +116,7 @@ resource "aws_autoscaling_group" "app" {
 }
 
 resource "aws_autoscaling_policy" "cpu" {
-  autoscaling_group_name    = "${aws_autoscaling_group.app.name}"
+  autoscaling_group_name    = aws_autoscaling_group.app.name
   name                      = "cpu"
   policy_type               = "StepScaling"
   adjustment_type           = "ExactCapacity"
@@ -155,7 +155,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
   period      = "60"
 
   dimensions {
-    AutoScalingGroupName = "${aws_autoscaling_group.app.name}"
+    AutoScalingGroupName = aws_autoscaling_group.app.name
   }
 
   comparison_operator = "GreaterThanThreshold"

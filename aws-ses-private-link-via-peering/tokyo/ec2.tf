@@ -1,7 +1,7 @@
 ################################################################################
 # EC2
 
-resource aws_instance server {
+resource "aws_instance" "server" {
   ami                         = var.ami_id
   key_name                    = var.key_name
   instance_type               = "t3.nano"

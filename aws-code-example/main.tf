@@ -138,8 +138,8 @@ resource "aws_codebuild_project" "build_2nd" {
   service_role = aws_iam_role.build_role.arn
 
   source {
-    type = "CODEPIPELINE"
-    buildspec           = "buildspec-2nd.yml"
+    type      = "CODEPIPELINE"
+    buildspec = "buildspec-2nd.yml"
   }
 
   artifacts {
@@ -215,7 +215,7 @@ resource "aws_codepipeline" "pipeline" {
       version  = "1"
 
       configuration = {
-        ProjectName = aws_codebuild_project.build_2nd.name
+        ProjectName   = aws_codebuild_project.build_2nd.name
         PrimarySource = "source"
       }
 
