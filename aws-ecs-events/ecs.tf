@@ -11,9 +11,9 @@ resource "aws_ecs_service" "main" {
   availability_zone_rebalancing = "ENABLED"
   enable_execute_command        = true
 
-  desired_count                      = 2
+  desired_count                      = 1
   deployment_maximum_percent         = 200
-  deployment_minimum_healthy_percent = 100
+  deployment_minimum_healthy_percent = 0
 
   deployment_circuit_breaker {
     enable   = true
@@ -41,12 +41,6 @@ resource "aws_ecs_task_definition" "main" {
       "name" : "app",
       "image" : "nginx:alpine",
       "essential" : true,
-      "environment" : [
-        {
-          "name" : "APP_ENV",
-          "value" : plantimestamp()
-        }
-      ],
       "portMappings" : [
         {
           "containerPort" : 80,
