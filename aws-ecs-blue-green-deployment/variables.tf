@@ -1,5 +1,5 @@
 
 variable "name" {
   type    = string
-  default = "hello-ecs"
+  default = "ecs-blue-green-deployment"
 }
