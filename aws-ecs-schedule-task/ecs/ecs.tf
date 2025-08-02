@@ -1,5 +1,7 @@
-////////////////////////////////////////////////////////////////////////////////
-// ECS
+
+resource "aws_ecs_cluster" "main" {
+  name = var.name
+}
 
 resource "aws_ecs_task_definition" "main" {
   family                   = var.name
@@ -20,24 +22,14 @@ resource "aws_ecs_task_definition" "main" {
           "value" : "dev"
         }
       ],
-      "portMappings" : [
-        {
-          "containerPort" : 80,
-          "protocol" : "tcp"
-        }
-      ],
       "logConfiguration" : {
         "logDriver" : "awslogs",
         "options" : {
           "awslogs-group" : aws_cloudwatch_log_group.ecs.name,
-          "awslogs-region" : data.aws_region.current.name,
+          "awslogs-region" : data.aws_region.main.region,
           "awslogs-stream-prefix" : "app"
         }
       }
     }
   ])
-}
-
-resource "aws_ecs_cluster" "main" {
-  name = var.name
 }
