@@ -2,8 +2,7 @@
 ```sh
 terraform apply
 
-ssh "ec2-user@$(terraform output -raw instance_id)"
-
-curl https://<BUCKET>.s3.ap-northeast-1.amazonaws.com/a.txt
-curl https://<BUCKET>.s3.ap-northeast-1.amazonaws.com/b.txt
+curl http://$(terraform output -raw domain)/index.html
+curl http://$(terraform output -raw domain)/a.txt
+curl http://$(terraform output -raw domain)/b.txt
 ```
