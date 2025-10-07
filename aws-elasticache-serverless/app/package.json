@@ -1,0 +1,15 @@
+{
+  "name": "aws-elasticache-serverless",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "main.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "ioredis": "^5.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.1"
+  }
+}
