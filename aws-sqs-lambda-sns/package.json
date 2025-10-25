@@ -1,0 +1,15 @@
+{
+  "name": "aws-sqs-lambda-sns",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "main": "index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-sns": "^3.916.0",
+    "@tsconfig/node24": "^24.0.1",
+    "@types/node": "^24.9.1"
+  }
+}
