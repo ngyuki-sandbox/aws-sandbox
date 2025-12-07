@@ -1,0 +1,14 @@
+name = "alb-oidc"
+
+# Route 53 で管理しているパブリックホストゾーンおよび ALB に用いるドメイン名
+zone_name       = "example.com"
+alb_domain_name = "alb-oidc.example.com"
+
+# OIDC プロバイダーのクライアント情報
+oidc_client_id              = "xxx.apps.googleusercontent.com"
+oidc_client_secret          = "GOCSPX-xxx"
+oidc_issuer                 = "https://accounts.google.com"
+oidc_authorization_endpoint = "https://accounts.google.com/o/oauth2/v2/auth"
+oidc_token_endpoint         = "https://oauth2.googleapis.com/token"
+oidc_user_info_endpoint     = "https://openidconnect.googleapis.com/v1/userinfo"
+oidc_scope                  = "openid email profile"
