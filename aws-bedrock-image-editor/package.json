@@ -1,0 +1,15 @@
+{
+  "name": "aws-bedrock-image-generation",
+  "version": "1.0.0",
+  "description": "AWS Bedrock image generation sample",
+  "type": "module",
+  "scripts": {
+    "generate": "node bedrock-sdk.mjs",
+    "edit": "node image-editor-simple.mjs",
+    "edit-advanced": "node image-editor.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.0.0",
+    "canvas": "^3.2.0"
+  }
+}
