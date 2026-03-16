@@ -1,0 +1,6 @@
+name = "alb-jwt"
+
+zone_name       = "example.com"
+alb_domain_name = "alb-jwt.example.com"
+jwks_endpoint   = "https://XXXXX.auth0.com/.well-known/jwks.json"
+jwks_issuer     = "https://XXXXX.auth0.com/"
