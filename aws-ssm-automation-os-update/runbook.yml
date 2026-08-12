@@ -1,0 +1,141 @@
+---
+schemaVersion: '0.3'
+assumeRole: ${ assume_role }
+
+parameters:
+  InstanceId:
+    type: String
+
+mainSteps:
+  - name: GetInstanceInitialInfo
+    action: aws:executeScript
+    inputs:
+      Runtime: python3.12
+      Handler: get_initial_info
+      Script: ${ get_initial_info }
+      InputPayload:
+        InstanceId: '{{ InstanceId }}'
+    outputs:
+      - Name: IsInAlb
+        Selector: $.Payload.IsInAlb
+        Type: Boolean
+      - Name: TargetGroupArn
+        Selector: $.Payload.TargetGroupArn
+        Type: String
+      - Name: AmiName
+        Selector: $.Payload.AmiName
+        Type: String
+
+  - name: CreateBackupAmi
+    action: aws:createImage
+    inputs:
+      InstanceId: '{{ InstanceId }}'
+      ImageName: '{{ GetInstanceInitialInfo.AmiName }}'
+      NoReboot: true
+
+  - name: BranchByAlbStatus
+    action: aws:branch
+    inputs:
+      Choices:
+        - NextStep: RunOsUpdate
+          Variable: '{{ GetInstanceInitialInfo.IsInAlb }}'
+          BooleanEquals: false
+
+  - name: DeregisterInstanceFromTargetGroup
+    action: aws:executeAwsApi
+    inputs:
+      Service: elbv2
+      Api: DeregisterTargets
+      TargetGroupArn: '{{ GetInstanceInitialInfo.TargetGroupArn }}'
+      Targets:
+        - Id: '{{ InstanceId }}'
+
+  - name: WaitForDeregistration
+    action: aws:waitForAwsResourceProperty
+    timeoutSeconds: 600
+    inputs:
+      Service: elbv2
+      Api: DescribeTargetHealth
+      TargetGroupArn: '{{ GetInstanceInitialInfo.TargetGroupArn }}'
+      Targets:
+        - Id: '{{ InstanceId }}'
+      PropertySelector: $.TargetHealthDescriptions[0].TargetHealth.State
+      DesiredValues:
+        - unused
+    onFailure: step:RunOsUpdate
+
+  - name: RunOsUpdate
+    action: aws:runCommand
+    inputs:
+      DocumentName: AWS-RunShellScript
+      InstanceIds:
+        - '{{ InstanceId }}'
+      Parameters:
+        commands:
+          - sudo dd if=/dev/zero of=/swap bs=2M count=1024
+          - sudo mkswap /swap
+          - sudo swapon /swap
+          - set -eo pipefail
+          - base64 -d <<<'${ versionlock }' | gzip -d | sudo tee /etc/dnf/plugins/versionlock.list >/dev/null
+          - sudo dnf update -y
+      CloudWatchOutputConfig:
+        CloudWatchLogGroupName: ${ log_group }
+        CloudWatchOutputEnabled: true
+
+  - name: Reboot
+    action: aws:executeAutomation
+    inputs:
+      DocumentName: AWS-RestartEC2Instance
+      RuntimeParameters:
+        InstanceId:
+          - '{{ InstanceId }}'
+
+  - name: WaitForSsmAgentOnline
+    action: aws:waitForAwsResourceProperty
+    timeoutSeconds: 600
+    inputs:
+      Service: ssm
+      Api: DescribeInstanceInformation
+      InstanceInformationFilterList:
+        - key: InstanceIds
+          valueSet:
+            - '{{ InstanceId }}'
+      PropertySelector: $.InstanceInformationList[0].PingStatus
+      DesiredValues:
+        - Online
+
+  - name: BranchForReRegister
+    action: aws:branch
+    inputs:
+      Choices:
+        - NextStep: EndAutomation
+          Variable: '{{ GetInstanceInitialInfo.IsInAlb }}'
+          BooleanEquals: false
+      Default: RegisterInstanceToTargetGroup
+
+  - name: RegisterInstanceToTargetGroup
+    action: aws:executeAwsApi
+    inputs:
+      Service: elbv2
+      Api: RegisterTargets
+      TargetGroupArn: '{{ GetInstanceInitialInfo.TargetGroupArn }}'
+      Targets:
+        - Id: '{{ InstanceId }}'
+
+  - name: WaitForHealthyStatus
+    action: aws:waitForAwsResourceProperty
+    timeoutSeconds: 600
+    inputs:
+      Service: elbv2
+      Api: DescribeTargetHealth
+      TargetGroupArn: '{{ GetInstanceInitialInfo.TargetGroupArn }}'
+      Targets:
+        - Id: '{{ InstanceId }}'
+      PropertySelector: $.TargetHealthDescriptions[0].TargetHealth.State
+      DesiredValues:
+        - healthy
+
+  - name: EndAutomation
+    action: aws:sleep
+    inputs:
+      Duration: PT1S
