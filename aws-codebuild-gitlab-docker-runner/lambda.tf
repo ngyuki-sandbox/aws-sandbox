@@ -1,17 +1,15 @@
 
-data "aws_caller_identity" "self" {}
-
 data "archive_file" "main" {
   type        = "zip"
   source_file = "${path.module}/index.mjs"
-  output_path = "${path.module}/lambda.zip"
+  output_path = "${path.module}/tmp/lambda.zip"
 }
 
 resource "aws_lambda_function" "main" {
   function_name    = var.name
   role             = aws_iam_role.lambda.arn
   handler          = "index.handler"
-  runtime          = "nodejs22.x"
+  runtime          = "nodejs24.x"
   timeout          = 60
   filename         = data.archive_file.main.output_path
   source_code_hash = data.archive_file.main.output_base64sha256
@@ -20,9 +18,9 @@ resource "aws_lambda_function" "main" {
     variables = {
       CODEBUILD_PROJECT = aws_codebuild_project.main.name
       GITLAB_URL        = var.gitlab_url
-      GITLAB_TOKEN      = gitlab_project_access_token.main.token
-      SECRET_TOKEN      = random_password.token.result
       RUNNER_TAGS       = jsonencode(var.runner_tags)
+      GITLAB_TOKEN_SSM  = aws_ssm_parameter.gitlab_token.name
+      SECRET_TOKEN_SSN  = aws_ssm_parameter.secret_token.name
     }
   }
 
@@ -39,6 +37,18 @@ resource "aws_lambda_function_url" "main" {
 
 resource "random_password" "token" {
   length = 32
+}
+
+resource "aws_ssm_parameter" "gitlab_token" {
+  name  = "/${var.name}/gitlab-token"
+  type  = "SecureString"
+  value = gitlab_project_access_token.main.token
+}
+
+resource "aws_ssm_parameter" "secret_token" {
+  name  = "/${var.name}/secret-token"
+  type  = "SecureString"
+  value = random_password.token.result
 }
 
 resource "aws_cloudwatch_log_group" "lambda" {
@@ -82,6 +92,14 @@ resource "aws_iam_role_policy" "lambda" {
           "codebuild:StartBuild",
         ],
         "Resource" : aws_codebuild_project.main.arn
+      },
+      {
+        Action = "ssm:GetParameter"
+        Effect = "Allow"
+        Resource = [
+          aws_ssm_parameter.gitlab_token.arn,
+          aws_ssm_parameter.secret_token.arn,
+        ]
       },
     ]
   })

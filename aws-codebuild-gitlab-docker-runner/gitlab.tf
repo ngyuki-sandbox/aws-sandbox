@@ -8,23 +8,18 @@ data "gitlab_project" "main" {
 }
 
 resource "gitlab_project_hook" "main" {
-  name                    = "aws:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:${var.name}"
+  name                    = "aws:${data.aws_region.main.region}:${data.aws_caller_identity.main.account_id}:${var.name}"
   project                 = data.gitlab_project.main.id
   url                     = aws_lambda_function_url.main.function_url
   enable_ssl_verification = true
   push_events             = false
   job_events              = true
-  custom_headers = [
-    {
-      key   = "x-secret-token"
-      value = random_password.token.result
-    },
-  ]
+  token                   = random_password.token.result
 }
 
 resource "gitlab_project_access_token" "main" {
   project      = data.gitlab_project.main.id
-  name         = "aws:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:${var.name}"
+  name         = "aws:${data.aws_region.main.region}:${data.aws_caller_identity.main.account_id}:${var.name}"
   access_level = "maintainer"
   scopes       = ["api"]
   rotation_configuration = {
@@ -36,7 +31,7 @@ resource "gitlab_project_access_token" "main" {
 resource "gitlab_user_runner" "main" {
   project_id      = data.gitlab_project.main.id
   runner_type     = "project_type"
-  description     = "aws:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:${var.name}"
+  description     = "aws:${data.aws_region.main.region}:${data.aws_caller_identity.main.account_id}:${var.name}"
   locked          = true
   untagged        = false
   tag_list        = var.runner_tags

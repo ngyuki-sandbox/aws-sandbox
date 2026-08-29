@@ -2,14 +2,11 @@ version: 0.2
 env:
   shell: bash
 phases:
-  install:
-    commands:
-      - curl -fsSL https://s3.dualstack.us-east-1.amazonaws.com/gitlab-runner-downloads/main/binaries/gitlab-runner-linux-amd64 -o gitlab-runner
-      - chmod +x gitlab-runner
-
   build:
     commands:
-      - ./gitlab-runner run-single
+      - docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock
+          public.ecr.aws/gitlab/gitlab-runner:alpine
+          run-single
           --url "$GITLAB_URL"
           --token "$RUNNER_TOKEN"
           --max-builds 1

@@ -1,6 +1,6 @@
 
 resource "aws_s3_bucket" "main" {
-  bucket = var.name
+  bucket_prefix = "${var.name}-"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "main" {
@@ -16,27 +16,4 @@ resource "aws_s3_bucket_lifecycle_configuration" "main" {
       days = 30
     }
   }
-}
-
-resource "aws_s3_bucket_policy" "main" {
-  bucket = aws_s3_bucket.main.id
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Action" : "s3:*",
-        "Effect" : "Deny",
-        "Resource" : [
-          "${aws_s3_bucket.main.arn}",
-          "${aws_s3_bucket.main.arn}/*",
-        ],
-        "Principal" : "*"
-        "Condition" : {
-          "Bool" : {
-            "aws:SecureTransport" : "false"
-          }
-        },
-      },
-    ]
-  })
 }

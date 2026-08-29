@@ -27,7 +27,7 @@ resource "aws_codebuild_project" "main" {
 
   environment {
     type            = "LINUX_CONTAINER"
-    image           = "aws/codebuild/standard:7.0"
+    image           = "aws/codebuild/standard:8.0"
     compute_type    = "BUILD_GENERAL1_SMALL"
     privileged_mode = true
 
@@ -37,15 +37,22 @@ resource "aws_codebuild_project" "main" {
     }
 
     environment_variable {
-      name  = "RUNNER_TOKEN"
-      value = gitlab_user_runner.main.token
-    }
-
-    environment_variable {
       name  = "CACHE_BUCKET"
       value = aws_s3_bucket.main.bucket
     }
+
+    environment_variable {
+      name  = "RUNNER_TOKEN"
+      value = aws_ssm_parameter.runner_token.name
+      type  = "PARAMETER_STORE"
+    }
   }
+}
+
+resource "aws_ssm_parameter" "runner_token" {
+  name  = "/${var.name}/runner-token"
+  type  = "SecureString"
+  value = gitlab_user_runner.main.token
 }
 
 resource "aws_cloudwatch_log_group" "build" {
@@ -82,6 +89,11 @@ resource "aws_iam_role_policy" "build" {
         ]
         Effect : "Allow"
         Resource : "${aws_cloudwatch_log_group.build.arn}:*"
+      },
+      {
+        Action   = "ssm:GetParameters"
+        Effect   = "Allow"
+        Resource = aws_ssm_parameter.runner_token.arn
       },
       {
         Action : "s3:*",
