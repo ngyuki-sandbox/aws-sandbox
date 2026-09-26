@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  TestParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /sandbox/cfn-stackset/test
+      Type: String
+      Value: this is test
