@@ -41,9 +41,9 @@ resource "aws_db_subnet_group" "main" {
 }
 
 resource "aws_rds_cluster_parameter_group" "main" {
-  name        = "${var.name}-aurora-postgresql14"
-  description = "${var.name}-aurora-postgresql14"
-  family      = "aurora-postgresql14"
+  name        = "${var.name}-aurora-${var.package_name}"
+  description = "${var.name}-aurora-${var.package_name}"
+  family      = "aurora-${var.package_name}"
   parameter {
     name         = "log_min_duration_statement"
     value        = "1000"
@@ -52,9 +52,9 @@ resource "aws_rds_cluster_parameter_group" "main" {
 }
 
 resource "aws_db_parameter_group" "main" {
-  name        = "${var.name}-aurora-postgresql14"
-  description = "${var.name}-aurora-postgresql14"
-  family      = "aurora-postgresql14"
+  name        = "${var.name}-aurora-${var.package_name}"
+  description = "${var.name}-aurora-${var.package_name}"
+  family      = "aurora-${var.package_name}"
   parameter {
     name         = "track_activity_query_size"
     value        = "1048576"

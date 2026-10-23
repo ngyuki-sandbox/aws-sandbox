@@ -11,6 +11,10 @@ variable "engine_version" {
   type = string
 }
 
+variable "package_name" {
+  type = string
+}
+
 variable "master_username" {
   type = string
 }
@@ -28,14 +32,10 @@ variable "instance_class" {
 }
 
 variable "instance_count" {
-  type = string
+  type = number
 }
 
 variable "global_cluster_identifier" {
   type    = string
   default = null
-}
-
-variable "ec2_authorized_keys" {
-  type = list(string)
 }

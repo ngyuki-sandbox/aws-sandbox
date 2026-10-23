@@ -1,11 +1,10 @@
 # Amazon Aurora Global Database
 
 ```sh
-aws-vault exec --region ap-northeast-1 profile -- ssh ec2-user@i-11111111111111111
-aws-vault exec --region ap-northeast-3 profile -- ssh ec2-user@i-22222222222222222
+aws ssm start-session --region ap-northeast-1 --target "$(terraform output -raw tokyo_instance_id)"
+aws ssm start-session --region ap-northeast-3 --target "$(terraform output -raw osaka_instance_id)"
 
-sudo dnf install -y postgresql15
-
+sudo dnf install -y postgresql18
 PGPASSWORD=password psql -h rds.local -U test
 ```
 
@@ -36,11 +35,17 @@ select * from t;
 
 aws_rds_global_cluster.database_name が何のためにあるのか、判らない？
 
-## セカンダリ database_name, username,password
+## セカンダリの database_name,username,password
 
 セカンダリクラスタの作成時は database_name,master_username,master_password は指定できない。
-これらはプライアンリと同値にしかならないため。
+これらはプライマリクラスタと同値にしかならないため。
 
 > InvalidParameterCombination: Cannot specify database name for cross region replication cluster
 > InvalidParameterCombination: Cannot specify user name for cross region replication cluster
 > InvalidParameterCombination: Cannot specify password for cross region replication cluster
+
+## 検証系などでコスト削減
+
+- セカンダリクラスタはヘッドレス化できるが、プライマリクラスタは最低でも1つのライターインスタンスが必要
+- セカンダリクラスタが存在する場合（ヘッドレスでも）、プライマリクラスタを停止したりヘッドレス化したりできない
+- セカンダリクラスタは削除可能なので、シングルクラスタに戻したうえで、プライマリクラスタを停止やヘッドレス化は可能

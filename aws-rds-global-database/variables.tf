@@ -15,6 +15,10 @@ variable "engine_version" {
   type = string
 }
 
+variable "package_name" {
+  type = string
+}
+
 variable "database_name" {
   type = string
 }
@@ -29,8 +33,4 @@ variable "master_password" {
 
 variable "instance_class" {
   type = string
-}
-
-variable "ec2_authorized_keys" {
-  type = list(string)
 }
