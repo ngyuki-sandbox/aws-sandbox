@@ -8,6 +8,11 @@ resource "aws_codebuild_project" "main" {
   source {
     type     = "GITLAB_SELF_MANAGED"
     location = var.gitlab_repo
+
+    auth {
+      type     = "CODECONNECTIONS"
+      resource = aws_codeconnections_connection.main.arn
+    }
   }
 
   artifacts {
@@ -33,29 +38,6 @@ resource "aws_codebuild_project" "main" {
   }
 }
 
-resource "terraform_data" "main" {
-  input = {
-    project_name = aws_codebuild_project.main.name
-    source = jsonencode({
-      "type" : "GITLAB_SELF_MANAGED",
-      "location" : var.gitlab_repo,
-      "auth" : {
-        "type" : "CODECONNECTIONS",
-        "resource" : aws_codeconnections_connection.main.arn
-      },
-    })
-  }
-
-  provisioner "local-exec" {
-    command     = <<EOT
-      aws codebuild update-project --name "$${project_name}" --source "$${source}"
-    EOT
-    environment = self.input
-  }
-
-  depends_on = [aws_codebuild_project.main]
-}
-
 resource "aws_codebuild_webhook" "main" {
   project_name = aws_codebuild_project.main.name
 
@@ -66,8 +48,6 @@ resource "aws_codebuild_webhook" "main" {
       type                    = "EVENT"
     }
   }
-
-  depends_on = [terraform_data.main]
 }
 
 resource "aws_cloudwatch_log_group" "main" {
