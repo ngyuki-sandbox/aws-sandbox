@@ -2,22 +2,50 @@ version: 0.2
 env:
   shell: bash
 phases:
+  install:
+    commands:
+      - |
+        CACHE_URI="s3://${CACHE_BUCKET}/cache/bin/gitlab-runner-v${RUNNER_VERSION}"
+        if ! aws s3 cp "$CACHE_URI" ./gitlab-runner 2>/dev/null; then
+          echo "Cache miss, downloading from GitLab..."
+          DOWNLOAD_URL="https://s3.dualstack.us-east-1.amazonaws.com/gitlab-runner-downloads/v${RUNNER_VERSION}/binaries/gitlab-runner-linux-amd64"
+          FALLBACK_URL="https://s3.dualstack.us-east-1.amazonaws.com/gitlab-runner-downloads/latest/binaries/gitlab-runner-linux-amd64"
+          curl -fsSL "$DOWNLOAD_URL" -o gitlab-runner || curl -fsSL "$FALLBACK_URL" -o gitlab-runner
+          aws s3 cp ./gitlab-runner "$CACHE_URI"
+        fi
+      - chmod +x gitlab-runner
+
   build:
     commands:
-      - docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock
-          public.ecr.aws/gitlab/gitlab-runner:alpine
-          run-single
-          --url "$GITLAB_URL"
-          --token "$RUNNER_TOKEN"
-          --max-builds 1
-          --wait-timeout 60
-          --executor docker
-          --docker-privileged
-          --docker-helper-image public.ecr.aws/gitlab/gitlab-runner-helper:alpine-latest-x86_64-latest
-          --docker-image public.ecr.aws/docker/library/alpine:latest
-          --docker-allowed-pull-policies always
-          --docker-allowed-pull-policies never
-          --docker-allowed-pull-policies if-not-present
-          --cache-type s3
-          --cache-s3-bucket-name "$CACHE_BUCKET"
-          --cache-s3-bucket-location "$AWS_REGION"
+      - |
+        if [ "$EXECUTOR" == "shell" ]; then
+          ./gitlab-runner run-single \
+            --url "$GITLAB_URL" \
+            --token "$RUNNER_TOKEN_SHELL" \
+            --max-builds 1 \
+            --wait-timeout 30 \
+            --executor shell \
+            --cache-type s3 \
+            --cache-shared \
+            --cache-s3-bucket-name "$CACHE_BUCKET" \
+            --cache-s3-bucket-location "$AWS_REGION" \
+            --cache-path cache
+        else
+          ./gitlab-runner run-single \
+            --url "$GITLAB_URL" \
+            --token "$RUNNER_TOKEN_DOCKER" \
+            --max-builds 1 \
+            --wait-timeout 30 \
+            --executor docker \
+            --docker-privileged \
+            --docker-helper-image public.ecr.aws/gitlab/gitlab-runner-helper:alpine-latest-x86_64-latest \
+            --docker-image public.ecr.aws/docker/library/alpine:latest \
+            --docker-allowed-pull-policies always \
+            --docker-allowed-pull-policies never \
+            --docker-allowed-pull-policies if-not-present \
+            --cache-type s3 \
+            --cache-shared \
+            --cache-s3-bucket-name "$CACHE_BUCKET" \
+            --cache-s3-bucket-location "$AWS_REGION" \
+            --cache-path cache
+        fi

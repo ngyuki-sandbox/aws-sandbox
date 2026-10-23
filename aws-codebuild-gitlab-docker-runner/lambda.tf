@@ -16,11 +16,12 @@ resource "aws_lambda_function" "main" {
 
   environment {
     variables = {
-      CODEBUILD_PROJECT = aws_codebuild_project.main.name
-      GITLAB_URL        = var.gitlab_url
-      RUNNER_TAGS       = jsonencode(var.runner_tags)
-      GITLAB_TOKEN_SSM  = aws_ssm_parameter.gitlab_token.name
-      SECRET_TOKEN_SSN  = aws_ssm_parameter.secret_token.name
+      CODEBUILD_PROJECT  = aws_codebuild_project.main.name
+      GITLAB_URL         = var.gitlab_url
+      RUNNER_DOCKER_TAGS = jsonencode(var.runner_docker_tags)
+      RUNNER_SHELL_TAGS  = jsonencode(var.runner_shell_tags)
+      GITLAB_TOKEN_SSM   = aws_ssm_parameter.gitlab_token.name
+      SIGNING_TOKEN_SSM  = aws_ssm_parameter.signing_token.name
     }
   }
 
@@ -35,7 +36,23 @@ resource "aws_lambda_function_url" "main" {
   authorization_type = "NONE"
 }
 
-resource "random_password" "token" {
+resource "aws_lambda_permission" "FunctionURLAllowPublicAccess" {
+  statement_id           = "FunctionURLAllowPublicAccess"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.main.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+
+resource "aws_lambda_permission" "FunctionURLInvokeAllowPublicAccess" {
+  statement_id             = "FunctionURLInvokeAllowPublicAccess"
+  action                   = "lambda:InvokeFunction"
+  function_name            = aws_lambda_function.main.function_name
+  principal                = "*"
+  invoked_via_function_url = true
+}
+
+resource "random_bytes" "signing_token" {
   length = 32
 }
 
@@ -45,10 +62,10 @@ resource "aws_ssm_parameter" "gitlab_token" {
   value = gitlab_project_access_token.main.token
 }
 
-resource "aws_ssm_parameter" "secret_token" {
-  name  = "/${var.name}/secret-token"
+resource "aws_ssm_parameter" "signing_token" {
+  name  = "/${var.name}/signing-token"
   type  = "SecureString"
-  value = random_password.token.result
+  value = "whsec_${random_bytes.signing_token.base64}"
 }
 
 resource "aws_cloudwatch_log_group" "lambda" {
@@ -73,8 +90,13 @@ resource "aws_iam_role" "lambda" {
   })
 }
 
-resource "aws_iam_role_policy" "lambda" {
-  role = aws_iam_role.lambda.name
+resource "aws_iam_role_policy_attachment" "lambda" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = aws_iam_policy.lambda.arn
+}
+
+resource "aws_iam_policy" "lambda" {
+  name = aws_iam_role.lambda.name
   policy = jsonencode({
     "Version" : "2012-10-17",
     "Statement" : [
@@ -98,7 +120,7 @@ resource "aws_iam_role_policy" "lambda" {
         Effect = "Allow"
         Resource = [
           aws_ssm_parameter.gitlab_token.arn,
-          aws_ssm_parameter.secret_token.arn,
+          aws_ssm_parameter.signing_token.arn,
         ]
       },
     ]

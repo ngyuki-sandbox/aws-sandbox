@@ -37,22 +37,49 @@ resource "aws_codebuild_project" "main" {
     }
 
     environment_variable {
-      name  = "CACHE_BUCKET"
-      value = aws_s3_bucket.main.bucket
+      name  = "RUNNER_VERSION"
+      value = data.gitlab_metadata.main.version
     }
 
     environment_variable {
-      name  = "RUNNER_TOKEN"
-      value = aws_ssm_parameter.runner_token.name
+      name  = "RUNNER_TOKEN_DOCKER"
+      value = aws_ssm_parameter.runner_token_docker.name
       type  = "PARAMETER_STORE"
+    }
+
+    environment_variable {
+      name  = "RUNNER_TOKEN_SHELL"
+      value = aws_ssm_parameter.runner_token_shell.name
+      type  = "PARAMETER_STORE"
+    }
+
+    environment_variable {
+      name  = "EXECUTOR"
+      value = "docker"
+    }
+
+    environment_variable {
+      name  = "CACHE_BUCKET"
+      value = aws_s3_bucket.main.bucket
     }
   }
 }
 
-resource "aws_ssm_parameter" "runner_token" {
-  name  = "/${var.name}/runner-token"
+moved {
+  from = aws_ssm_parameter.runner_token
+  to   = aws_ssm_parameter.runner_token_docker
+}
+
+resource "aws_ssm_parameter" "runner_token_docker" {
+  name  = "/${var.name}/runner-token-docker"
   type  = "SecureString"
-  value = gitlab_user_runner.main.token
+  value = gitlab_user_runner.docker.token
+}
+
+resource "aws_ssm_parameter" "runner_token_shell" {
+  name  = "/${var.name}/runner-token-shell"
+  type  = "SecureString"
+  value = gitlab_user_runner.shell.token
 }
 
 resource "aws_cloudwatch_log_group" "build" {
@@ -75,9 +102,13 @@ resource "aws_iam_role" "build" {
   })
 }
 
-resource "aws_iam_role_policy" "build" {
+resource "aws_iam_role_policy_attachment" "build" {
+  role       = aws_iam_role.build.id
+  policy_arn = aws_iam_policy.build.arn
+}
+
+resource "aws_iam_policy" "build" {
   name = aws_iam_role.build.id
-  role = aws_iam_role.build.id
 
   policy = jsonencode({
     Version : "2012-10-17"
@@ -91,9 +122,12 @@ resource "aws_iam_role_policy" "build" {
         Resource : "${aws_cloudwatch_log_group.build.arn}:*"
       },
       {
-        Action   = "ssm:GetParameters"
-        Effect   = "Allow"
-        Resource = aws_ssm_parameter.runner_token.arn
+        Action = "ssm:GetParameters"
+        Effect = "Allow"
+        Resource = [
+          aws_ssm_parameter.runner_token_docker.arn,
+          aws_ssm_parameter.runner_token_shell.arn,
+        ]
       },
       {
         Action : "s3:*",
