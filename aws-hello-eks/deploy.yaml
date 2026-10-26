@@ -1,40 +1,43 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: httpd
+  name: nginx
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: httpd
+      app: nginx
   strategy:
     rollingUpdate:
       maxSurge: 50%
       maxUnavailable: 0%
   template:
     metadata:
-      name: httpd
+      name: nginx
       labels:
-        app: httpd
+        app: nginx
     spec:
       containers:
-        - name: httpd
-          image: httpd
+        - name: nginx
+          image: nginx
           resources:
             requests:
               cpu: 100m
               memory: 128Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
-  name: httpd
+  name: nginx
 spec:
   type: LoadBalancer
   ports:
     - name: http
       port: 80
   selector:
-    app: httpd
+    app: nginx
