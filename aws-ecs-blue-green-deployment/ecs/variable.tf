@@ -27,3 +27,7 @@ variable "target_group_arns" {
 variable "listener_rule_arn" {
   type = string
 }
+
+variable "timestamp" {
+  type = string
+}

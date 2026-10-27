@@ -1,4 +1,12 @@
 
+resource "terraform_data" "timestamp" {
+  input = plantimestamp()
+
+  lifecycle {
+    ignore_changes = [input]
+  }
+}
+
 module "vpc" {
   source = "./vpc"
   name   = var.name
@@ -20,4 +28,5 @@ module "ecs" {
   security_group_ids = [module.vpc.security_group_id]
   target_group_arns  = module.elb.target_group_arns
   listener_rule_arn  = module.elb.listener_rule_arn
+  timestamp          = terraform_data.timestamp.output
 }

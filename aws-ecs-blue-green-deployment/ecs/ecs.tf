@@ -31,7 +31,6 @@ resource "aws_ecs_service" "main" {
     container_name   = "app"
     container_port   = 80
     target_group_arn = var.target_group_arns[0]
-
     advanced_configuration {
       alternate_target_group_arn = var.target_group_arns[1]
       production_listener_rule   = var.listener_rule_arn
@@ -52,8 +51,12 @@ resource "aws_ecs_task_definition" "main" {
     {
       "name" : "app",
       "image" : "nginx:alpine",
-      # "image" : "httpd:alpine",
       "essential" : true,
+      "command" : [
+        "sh",
+        "-c",
+        "echo '${var.timestamp}' > /usr/share/nginx/html/index.html && exec nginx -g 'daemon off;'"
+      ],
       "portMappings" : [
         {
           "containerPort" : 80,
