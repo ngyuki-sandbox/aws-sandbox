@@ -1,0 +1,12 @@
+{
+  "$comment": "ローカル確認用のサンプル。実際の vars.json は Terraform が生成して S3 にアップロードする zip に同梱する",
+  "region": "ap-northeast-1",
+  "cluster": "ecspresso-codedeploy",
+  "service": "ecspresso-codedeploy",
+  "codedeployApplication": "ecspresso-codedeploy",
+  "codedeployGroup": "ecspresso-codedeploy",
+  "family": "ecspresso-codedeploy",
+  "executionRoleArn": "arn:aws:iam::123456789012:role/ecspresso-codedeploy-ecs-execution",
+  "taskRoleArn": "arn:aws:iam::123456789012:role/ecspresso-codedeploy-ecs-task",
+  "logGroup": "/ecspresso-codedeploy/ecs"
+}

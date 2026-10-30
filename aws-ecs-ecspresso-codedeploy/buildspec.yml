@@ -1,0 +1,30 @@
+version: 0.2
+
+env:
+  variables:
+    ECSPRESSO_CACHE_DIR: /root/.cache/ecspresso
+
+phases:
+  install:
+    commands:
+      # キャッシュに無ければ最新リリースを GitHub からダウンロードする
+      - |
+        if [ -x "${ECSPRESSO_CACHE_DIR}/ecspresso" ]; then
+          echo "Using cached ecspresso: ${ECSPRESSO_CACHE_DIR}/ecspresso"
+        else
+          version=$(curl -fsSI https://github.com/kayac/ecspresso/releases/latest | sed -n 's|^location: .*/tag/v\([^[:space:]]*\).*|\1|ip')
+          test -n "${version}"
+          echo "Downloading ecspresso v${version} from GitHub (cache not found)"
+          mkdir -p "${ECSPRESSO_CACHE_DIR}"
+          curl -fsSL "https://github.com/kayac/ecspresso/releases/download/v${version}/ecspresso_${version}_linux_amd64.tar.gz" | tar -xz -C "${ECSPRESSO_CACHE_DIR}" ecspresso
+        fi
+        install -m 755 "${ECSPRESSO_CACHE_DIR}/ecspresso" /usr/local/bin/ecspresso
+      - ecspresso version
+  build:
+    commands:
+      # S3 ソースの zip は CodeBuild がソースディレクトリに展開済み
+      - ecspresso deploy --config ecspresso.jsonnet --rollback-events DEPLOYMENT_FAILURE
+
+cache:
+  paths:
+    - /root/.cache/ecspresso/**/*
